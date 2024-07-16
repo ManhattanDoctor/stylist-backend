@@ -1,0 +1,59 @@
+{
+    "prompt": {
+        "tarot": {
+            "spread": {
+                "meaning": {
+                    "role": "Ты опытный стилист.",
+                    "manner": "Используй ясный и понятный язык.",
+                    "task": "Опиши подробно стиля человека и разбери каждое изображение в по отдельности.",
+                    "example": "Ответ должен содержать разбор каждой детали одежды. Не более чем на {maxWords} слов. Напиши свой общей вывод в конце.",
+                    "context": "К тебе обратился человек за помощью в анализе своего стиля."
+                },
+                "question": "Является ли вопрос \"{question}\", заданный картам Таро корректным? Если ответ положительный, то напиши 1, а если отрицательный, то напиши 0."
+            }
+        }
+    },
+    "messenger": {
+        "description": "Карманный стилист - это ваш персональный модный консультант, который поможет вам выбирать стильную и подходящую одежду. Выберите своего стилиста и просто загрузите свое фото!",
+        "photo": {
+            "action": {
+                "add": {
+                    "description": "Ваш персональный стилист ждет фотографию для оценки вашего образа, просто отправьте изображение в чат и он примется за работу."
+                }
+            }
+        },
+        "master": {
+            "action": {
+                "list": {
+                    "list": "Выбрать стилиста",
+                    "confirmation": "Выберите своего специалиста:",
+                    "notification": "Ваш персональный стилист {name}, теперь вы можете загрузить свое фото и он оценит его!"
+                },
+                "mean": {
+                    "mean": "Оценить фотографию",
+                    "progress": "Ваш стилист оценивает ваш образ, вам нужно немного подождать..."
+                }
+            }
+        }
+    },
+    "notification": {
+        "USER_PAYMENT_SUCCEED": "\"{name}\"{isMale, select, true { купил} false { купила} undefined{} other{ купило}} {TOKEN} токенов за {RUB} рублей",
+        "TAROT_SPREAD_MEANING_ADDED": "\"{name}\"{isMale, select, true { попросил} false { попросила} undefined{} other{ попросило}} трактовку расклада \"{question}\"",
+        "TAROT_SPREAD_MEANING_PREPARED": "\"{name}\"{isMale, select, true { попросил} false { попросила} undefined{} other{ попросило}} проверить трактовку расклада \"{question}\"",
+        "TAROT_SPREAD_MEANING_ERRORED": "\"{name}\" {isMale, select, true { получил} false { получила} undefined{} other{ получило}} ошибку при трактовки расклада \"{question}\"",
+        "TAROT_SPREAD_MEANING_APPROVED": "Трактовка вашего расклада \"{question}\" ожидает вас в приложении",
+        "TAROT_SPREAD_MEANING_REJECTED": "Трактовка вашего расклада отклонена, поскольку {reason, select, UNCLEAR_QUESTION {вопрос непонятен} INCORRECT_QUESTION {вопрос задан некорректно} INCONSEQUENTIAL_QUESTION {вопрос несущественен} RECURRING_QUESTION {этот вопрос уже задавался} INCORRECT_QUESTION_FOR_SPREAD {вопрос не подходит для этого расклада} SEVERAL_QUESTIONS_IN_ONE {несколько вопросов для одного расклада} undefined{} other{}}."
+    },
+    "error": {
+        "userUidNotFound": "Отсутствует уникальный номер пользователя",
+        "AI_EMPTY_RESPONSE": "Получен пустой ответ",
+        "AI_MASTER_IN_PROGRESS": "Ваш стиль уже анализируется, пожалуйста подождите...",
+        "TELEGRAM_ACCOUNT_NOT_FOUND": "Не найден аккаунт в Telegram",
+        "TELEGRAM_ACCOUNT_SIGNATURE_INVALID": "Некорректная подпись аккаунта в Telegram",
+        "USER_UNDEFINED": "Пользователь не определен",
+        "USER_NOT_FOUND": "Пользователь не найден",
+        "USER_STATUS_INVALID": "Пользователь не активен",
+        "USER_ACCOUNT_INVALID": "⇛error.REQUEST_INVALID",
+        "USER_ACCOUNT_DONATER_REQUIRED": "Эта возможность доступна только благотворителям проекта"
+    }
+}

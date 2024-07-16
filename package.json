@@ -1,0 +1,32 @@
+{
+    "name": "@stylist/backend",
+    "version": "1.0.0",
+    "license": "MIT",
+    "author": "Renat Gubaev",
+    "scripts": {
+        "start": "npm run start --prefix src/packages/application/telegram",
+        "build": "npm run build --prefix src/packages/application/telegram",
+        "reset": "npm run reset --prefix src/packages/application/telegram"
+    },
+    "dependencies": {
+        "@nestjs/jwt": "^10.2.0",
+        "@nestjs/passport": "^10.0.3",
+        "@nestjs/platform-express": "^10.3.0",
+        "@nestjs/schedule": "^4.1.0",
+        "@nestjs/swagger": "^7.4.0",
+        "@nestjs/throttler": "^5.2.0",
+        "@nestjs/typeorm": "^10.0.0",
+        "@project/common": "file:./src/externals/common",
+        "@project/module": "file:./src/packages/module",
+        "@ts-core/backend": "~3.0.19",
+        "@ts-core/backend-nestjs": "~10.0.5",
+        "@types/request-ip": "^0.0.38",
+        "node-telegram-bot-api": "^0.66.0",
+        "openai": "^4.52.7",
+        "passport": "^0.5.2",
+        "passport-jwt": "^4.0.0"
+    },
+    "devDependencies": {
+        "@types/node-telegram-bot-api": "^0.64.7"
+    }
+}

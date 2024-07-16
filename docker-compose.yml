@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+    stylist-postgres:
+        image: postgres:11.4-alpine
+        restart: always
+        env_file:
+            - ./docker/telegram/.env
+        ports:
+            - 45432:5432
