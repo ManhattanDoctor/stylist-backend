@@ -56,38 +56,38 @@ export class TelegramBotService extends LoggerWrapper {
         for (let item of await this.database.userListGet()) {
             items.push([{ text: `🕺 ${item.preferences.name}`, callback_data: UserUtil.createUid(item) }]);
         }
-        await this.sendMessage(message.chat.id, await this.translate('messenger.master.action.list.confirmation'), { reply_markup: { inline_keyboard: items } });
+        this.sendMessage(message.chat.id, await this.translate('messenger.master.action.list.confirmation'), { reply_markup: { inline_keyboard: items } });
     }
 
     private async sendDefault(item: UserEntity, message: Message): Promise<void> {
         if (_.isNil(item.preferences.favoriteMasterId)) {
-            await this.sendMasterSelect(item, message);
+            this.sendMasterSelect(item, message);
         }
         else if (_.isEmpty(message.photo)) {
-            await this.sendPhotoAdd(item, message);
+            this.sendPhotoAdd(item, message);
         }
         else {
-            await this.sendMeaning(item, message);
+            this.sendMeaning(item, message);
         }
     }
 
     private async sendPhotoAdd(item: UserEntity, message: Message): Promise<void> {
-        await this.sendMessage(message.chat.id, await this.translate('messenger.photo.action.add.description'));
+        this.sendMessage(message.chat.id, await this.translate('messenger.photo.action.add.description'));
     }
 
     private async sendMasterSelect(item: UserEntity, message: Message): Promise<void> {
         let items = [
             [await this.getMasterListButton()]
         ];
-        await this.sendMessage(message.chat.id, await this.translate('messenger.description'), { reply_markup: { inline_keyboard: items } });
+        this.sendMessage(message.chat.id, await this.translate('messenger.description'), { reply_markup: { inline_keyboard: items } });
     }
 
     private async sendMeaning(item: UserEntity, message: Message): Promise<void> {
         let chatId = message.chat.id;
         let chatMessageId = message.message_id;
         if (this.progress.has(item.id)) {
-            await this.removeMessage(chatId, chatMessageId);
-            await this.sendMessage(chatId, await this.translate('error.AI_MASTER_IN_PROGRESS'));
+            this.removeMessage(chatId, chatMessageId);
+            this.sendMessage(chatId, await this.translate('error.AI_MASTER_IN_PROGRESS'));
             return;
         }
 
@@ -95,9 +95,7 @@ export class TelegramBotService extends LoggerWrapper {
 
         let photos = _.sortBy(message.photo, 'file_size');
         let pictures = [await this.bot.getFileLink(_.last(photos).file_id)];
-        chatMessageId = await this.sendMessage(chatId, await this.translate('messenger.master.action.mean.progress'));
-
-        this.transport.send(new AiMeanCommand({ userId: item.id, project: ProjectName.BOT, pictures, chatMessageId }));
+        this.sendMessage(chatId, await this.translate('messenger.master.action.mean.progress')).then(chatMessageId => this.transport.send(new AiMeanCommand({ userId: item.id, project: ProjectName.BOT, pictures, chatMessageId })));
     }
 
     // --------------------------------------------------------------------------
