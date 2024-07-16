@@ -6,7 +6,8 @@
     "scripts": {
         "start": "npm run start --prefix src/packages/application/telegram",
         "build": "npm run build --prefix src/packages/application/telegram",
-        "reset": "npm run reset --prefix src/packages/application/telegram"
+        "reset": "npm run reset --prefix src/packages/application/telegram",
+        "submodules:update": "git submodule update --init"
     },
     "dependencies": {
         "@nestjs/jwt": "^10.2.0",
