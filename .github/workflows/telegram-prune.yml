@@ -1,0 +1,16 @@
+name: TELEGRAM - PRUNE
+on: [workflow_dispatch]
+
+jobs:
+    prune:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Prune docker images and container
+              uses: appleboy/ssh-action@v0.1.4
+              with:
+                  key: ${{secrets.SSH_KEY}}
+                  host: ${{secrets.SSH_HOST}}
+                  username: ${{secrets.SSH_USERNAME}}
+                  script: |
+                    docker image prune -a -f
+                    docker container prune --filter "until=24h" -f

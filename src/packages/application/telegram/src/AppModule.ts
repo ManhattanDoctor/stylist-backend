@@ -45,8 +45,8 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
 
                 AiModule.forRoot({ key: settings.openAiApiKey }),
                 LoginModule.forRoot(settings),
-                LocaleModule.forRoot({ path: `/Users/renat.gubaev/Work/JS/stylist/backend/locale`, projects: [ProjectName.BOT], locales: ['ru'], prefixes: ['Server.json'] }),
-                // LocaleModule.forRoot(`${process.cwd()}/locale`),
+                // LocaleModule.forRoot({ path: `${process.cwd()}/locale`, projects: [ProjectName.BOT], locales: ['ru'], prefixes: ['Server.json'] }),
+                LocaleModule.forRoot({ path: `/Users/renat.gubaev/Work/JS/appraiser/appraiser-backend/locale`, projects: [ProjectName.BOT], locales: ['ru'], prefixes: ['Server.json'] }),
                 TelegramBotModule.forRoot({ token: settings.telegramToken, project: ProjectName.BOT, isPolling: true }),
             ],
             providers: [

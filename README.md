@@ -1,2 +1,2 @@
-# stylist-backend
-Classes for stylist-backend
+# appraiser-backend
+Classes for appraiser-backend

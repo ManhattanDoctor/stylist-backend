@@ -1,0 +1,33 @@
+name: TELEGRAM - DEPLOY (PRODUCTION)
+on: [workflow_dispatch]
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Prepare env variables
+              run: |
+                  echo REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+                  echo NAME=appraiser-telegram >> $GITHUB_ENV
+
+            - name: Stop and remove docker container
+              continue-on-error: true
+              uses: appleboy/ssh-action@v0.1.4
+              with:
+                  key: ${{secrets.SSH_KEY}}
+                  host: ${{secrets.SSH_HOST}}
+                  username: ${{secrets.SSH_USERNAME}}
+                  script: |
+                      docker stop ${{ env.NAME }}
+                      docker rm ${{ env.NAME }}
+
+            - name: Update docker image and run container
+              uses: appleboy/ssh-action@v0.1.4
+              with:
+                  key: ${{secrets.SSH_KEY}}
+                  host: ${{secrets.SSH_HOST}}
+                  username: ${{secrets.SSH_USERNAME}}
+                  script: |
+                      docker login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.GITHUB_TOKEN }}
+                      docker pull ghcr.io/${{ env.REPOSITORY }}/${{ env.NAME }}:latest
+                      docker run -t -i -d -p 30005:30005 -e WEB_PORT=30005 -e POSTGRES_USER=${{ secrets.POSTGRES_USER }} -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} -e POSTGRES_DB=${{ secrets.POSTGRES_DB }} -e TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }} -e OPEN_AI_API_KEY=${{ secrets.OPEN_AI_API_KEY }} --name ${{ env.NAME }} ghcr.io/${{ env.REPOSITORY }}/${{ env.NAME }}:latest

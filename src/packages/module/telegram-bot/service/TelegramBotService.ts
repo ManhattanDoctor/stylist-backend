@@ -83,17 +83,20 @@ export class TelegramBotService extends LoggerWrapper {
     }
 
     private async sendMeaning(item: UserEntity, message: Message): Promise<void> {
+        let chatId = message.chat.id;
+        let chatMessageId = message.message_id;
         if (this.progress.has(item.id)) {
-            await this.sendMessage(message.chat.id, await this.translate('error.AI_MASTER_IN_PROGRESS'));
+            await this.removeMessage(chatId, chatMessageId);
+            await this.sendMessage(chatId, await this.translate('error.AI_MASTER_IN_PROGRESS'));
             return;
         }
 
-        let chatId = message.chat.id;
+        this.progress.set(item.id, { chatId, expired: DateUtil.getDate(Date.now() + 3 * DateUtil.MILLISECONDS_MINUTE) });
+
         let photos = _.sortBy(message.photo, 'file_size');
         let pictures = [await this.bot.getFileLink(_.last(photos).file_id)];
-        let chatMessageId = await this.sendMessage(chatId, await this.translate('messenger.master.action.mean.progress'));
+        chatMessageId = await this.sendMessage(chatId, await this.translate('messenger.master.action.mean.progress'));
 
-        this.progress.set(item.id, { chatId, chatMessageId, expired: DateUtil.getDate(Date.now() + 3 * DateUtil.MILLISECONDS_MINUTE) });
         this.transport.send(new AiMeanCommand({ userId: item.id, project: ProjectName.BOT, pictures, chatMessageId }));
     }
 
@@ -215,6 +218,15 @@ export class TelegramBotService extends LoggerWrapper {
         }
     }
 
+    public async removeMessage(chatId: number, messageId: number): Promise<void> {
+        try {
+            await this.bot.deleteMessage(chatId, messageId);
+        }
+        catch (error) {
+            this.warn(`Telegram message error: "${error.message}"`);
+        }
+    }
+
     // --------------------------------------------------------------------------
     //
     //  Event Handlers
@@ -250,7 +262,8 @@ export class TelegramBotService extends LoggerWrapper {
 
     private aiMeanedHandler = async (params: IAiMeanedDto): Promise<void> => {
         this.progress.delete(params.userId);
-        this.editMessage(params.result, { chat_id: params.chatId, message_id: params.chatMessageId });
+        await this.removeMessage(params.chatId, params.chatMessageId);
+        await this.sendMessage(params.chatId, params.result);
     }
 
     // --------------------------------------------------------------------------
@@ -285,8 +298,6 @@ enum Commands {
 
 interface IProgress {
     chatId: number;
-    chatMessageId: number;
-
     expired: Date;
 }
 
