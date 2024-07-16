@@ -9,6 +9,7 @@
         "reset": "npm run reset --prefix src/packages/application/telegram",
         "submodules:update": "git submodule update --init"
     },
+    
     "dependencies": {
         "@nestjs/jwt": "^10.2.0",
         "@nestjs/passport": "^10.0.3",
