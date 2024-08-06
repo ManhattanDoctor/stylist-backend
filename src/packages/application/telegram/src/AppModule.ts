@@ -13,8 +13,9 @@ import { modulePath } from '@project/module';
 import { AiModule } from '@project/module/ai';
 import { THROTTLE_LIMIT_DEFAULT, THROTTLE_TTL_DEFAULT } from '@project/module/guard';
 import { InitializeService } from './service';
-import { LocaleModule } from '@project/module/locale';
+import { LanguageModule } from '@ts-core/backend-nestjs-language';
 import { CoinModule } from '@project/module/coin';
+import { PaymentModule } from '@project/module/payment';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TelegramBotModule } from '@project/module/telegram-bot';
 import { ProjectName } from '@project/common';
@@ -40,14 +41,16 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
 
                 CoinModule,
                 UserModule,
+                PaymentModule,
 
                 DatabaseModule,
 
                 AiModule.forRoot({ key: settings.openAiApiKey }),
                 LoginModule.forRoot(settings),
-                LocaleModule.forRoot({ path: `${process.cwd()}/locale`, projects: [ProjectName.BOT], locales: ['ru'], prefixes: ['Server.json'] }),
-                // LocaleModule.forRoot({ path: `/Users/renat.gubaev/Work/JS/appraiser/appraiser-backend/locale`, projects: [ProjectName.BOT], locales: ['ru'], prefixes: ['Server.json'] }),
-                TelegramBotModule.forRoot({ token: settings.telegramToken, project: ProjectName.BOT, isPolling: true }),
+
+                LanguageModule.forRoot({ path: `${process.cwd()}/locale`, projects: [{ name: ProjectName.BOT, locales: ['ru'], prefixes: ['Server.json'] }] }),
+                // LanguageModule.forRoot({ path: `/Users/renat.gubaev/Work/JS/appraiser/appraiser-backend/locale`, projects: [{ name: ProjectName.BOT, locales: ['ru'], prefixes: ['Server.json'] }] }),
+                TelegramBotModule.forRoot({ token: settings.telegramToken, merchant: settings.telegramMerchantToken, project: ProjectName.BOT, isPolling: true }),
             ],
             providers: [
                 InitializeService,

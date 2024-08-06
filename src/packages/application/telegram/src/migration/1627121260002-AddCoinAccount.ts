@@ -15,13 +15,13 @@ export class AddCoinAccount1627121260002 implements MigrationInterface {
                     constraint "coin_account_id_pkey" primary key,
 
                 "user_id" integer not null
-                    constraint "coin_account_user_id_fkey" references "user",
+                    constraint "coin_account_user_id_fkey" references "user" on delete cascade,
 
                 "amount" numeric not null,
                 "coin_id" varchar not null,
                 
-                "created_date" timestamp default now() not null,
-                "updated_date" timestamp default now() not null
+                "created" timestamp default now() not null,
+                "updated" timestamp default now() not null
             );
 
             create unique index "coin_account_ukey_coin_id_user_id" on "coin_account" (coin_id, user_id);

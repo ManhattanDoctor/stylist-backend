@@ -1,6 +1,5 @@
 import { AbstractSettings } from '@project/module/core';
 import { IJwtStrategySettings } from '@project/module/login/strategy';
-import { ITelegramBotSettings } from '@project/module/telegram-bot/service';
 import { IDatabaseSettings } from '@ts-core/backend';
 
 export class AppSettings extends AbstractSettings implements IJwtStrategySettings, IDatabaseSettings {
@@ -66,6 +65,10 @@ export class AppSettings extends AbstractSettings implements IJwtStrategySetting
 
     public get telegramToken(): string {
         return this.getValue('TELEGRAM_TOKEN');
+    }
+
+    public get telegramMerchantToken(): string {
+        return this.getValue('TELEGRAM_MERCHANT_TOKEN');
     }
 
 }

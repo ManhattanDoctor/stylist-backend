@@ -13,6 +13,7 @@ import { UserMasterEntity } from './UserMasterEntity';
 import { CoinAccountEntity } from '../coin';
 import { PaymentEntity, PaymentTransactionEntity } from '../payment';
 import { TelegramAccountEntity } from '../telegram';
+import { MeaningAccountEntity, MeaningEntity } from '../meaning';
 import * as _ from 'lodash';
 
 @Entity({ name: 'user' })
@@ -44,8 +45,8 @@ export class UserEntity extends TypeormValidableEntity implements User, IUIDable
     public status: UserStatus;
 
     @Expose({ groups: TRANSFORM_PRIVATE })
-    @CreateDateColumn({ name: 'created_date' })
-    public createdDate: Date;
+    @CreateDateColumn()
+    public created: Date;
 
     @OneToOne(() => UserAccountEntity, account => account.user, { cascade: true })
     @ValidateNested()
@@ -74,6 +75,21 @@ export class UserEntity extends TypeormValidableEntity implements User, IUIDable
     public lastLogin?: Date;
 
     @Exclude()
+    @OneToMany(() => MeaningEntity, item => item.user)
+    @Type(() => MeaningEntity)
+    public meanings?: Array<MeaningEntity>;
+
+    @Exclude()
+    @OneToMany(() => MeaningAccountEntity, account => account.user, { cascade: true })
+    @ValidateNested()
+    public meaningAccounts: MeaningAccountEntity;
+
+    @Exclude()
+    @OneToMany(() => CoinAccountEntity, item => item.user)
+    @Type(() => CoinAccountEntity)
+    public coinAccounts?: Array<CoinAccountEntity>;
+    
+    @Exclude()
     @OneToMany(() => PaymentEntity, item => item.user)
     @Type(() => PaymentEntity)
     public payments?: Array<PaymentEntity>;
@@ -82,11 +98,6 @@ export class UserEntity extends TypeormValidableEntity implements User, IUIDable
     @OneToMany(() => PaymentTransactionEntity, item => item.user)
     @Type(() => PaymentTransactionEntity)
     public paymentTransactions?: Array<PaymentTransactionEntity>;
-
-    @Exclude()
-    @OneToMany(() => CoinAccountEntity, item => item.user)
-    @Type(() => CoinAccountEntity)
-    public coinAccounts?: Array<CoinAccountEntity>;
 
     // --------------------------------------------------------------------------
     //

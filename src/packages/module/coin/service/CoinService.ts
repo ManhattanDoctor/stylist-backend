@@ -50,11 +50,6 @@ export class CoinService extends LoggerWrapper {
         return { type: CoinBonusType.DAILY, coinId: item.coinId, amount };
     }
 
-    private async getDonaterBonus(user: UserEntity, details?: IUserDetails): Promise<ICoinBonus> {
-        let item = await PaymentTransactionEntity.saveEntity(user.id, PaymentTransactionType.DONATER_BONUS, CoinId.TOKEN, CoinService.DONATER_BONUS);
-        return { type: CoinBonusType.DONATER, coinId: item.coinId, amount: item.amount };
-    }
-
     private async getRegistrationBonus(user: UserEntity): Promise<ICoinBonus> {
         let item = await PaymentTransactionEntity.saveEntity(user.id, PaymentTransactionType.REGISTRATION_BONUS, CoinId.TOKEN, CoinService.REGISTRATION_BONUS);
         return { type: CoinBonusType.REGISTRATION, coinId: item.coinId, amount: item.amount };
@@ -88,10 +83,6 @@ export class CoinService extends LoggerWrapper {
         return loginDate.getDate() !== lastLogin.getDate();
     }
 
-    private isNeedDonaterBonus(user: UserEntity): boolean {
-        return PermissionUtil.userIsDonater(user);
-    }
-
     // --------------------------------------------------------------------------
     //
     //  Public Methods
@@ -112,9 +103,6 @@ export class CoinService extends LoggerWrapper {
         }
         else if (this.isNeedDailyBonus(user)) {
             bonuses.push(await this.getDailyBonus(user, details));
-            if (this.isNeedDonaterBonus(user)) {
-                bonuses.push(await this.getDonaterBonus(user, details));
-            }
         }
         if (!_.isEmpty(bonuses)) {
             await this.update(user);

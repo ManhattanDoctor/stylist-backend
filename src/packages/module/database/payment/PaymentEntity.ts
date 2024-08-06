@@ -7,6 +7,7 @@ import { UserEntity } from '../user';
 import { Payment, PaymentAggregatorType, PaymentStatus } from '@project/common/payment';
 import { PaymentTransactionEntity } from './PaymentTransactionEntity';
 import * as _ from 'lodash';
+import { ProjectName } from '@project/common';
 
 @Entity({ name: 'payment' })
 export class PaymentEntity extends TypeormValidableEntity implements Payment {
@@ -29,6 +30,10 @@ export class PaymentEntity extends TypeormValidableEntity implements Payment {
     @IsEnum(PaymentStatus)
     public status: PaymentStatus;
 
+    @Column()
+    @IsString()
+    public project: string;
+
     @Column({ type: 'varchar' })
     @IsEnum(PaymentAggregatorType)
     public aggregator: PaymentAggregatorType;
@@ -38,11 +43,11 @@ export class PaymentEntity extends TypeormValidableEntity implements Payment {
     @ValidateNested()
     public transactions: Array<PaymentTransactionEntity>;
 
-    @CreateDateColumn({ name: 'created_date' })
-    public createdDate: Date;
+    @CreateDateColumn()
+    public created: Date;
 
-    @UpdateDateColumn({ name: 'updated_date' })
-    public updatedDate: Date;
+    @UpdateDateColumn()
+    public updated: Date;
 
     @ManyToOne(() => UserEntity, user => user.payments)
     @JoinColumn({ name: "user_id" })

@@ -13,7 +13,7 @@ export class User implements IUIDable {
     public resource: UserResource;
 
     @Type(() => Date)
-    public createdDate: Date;
+    public created: Date;
 
     @Type(() => UserAccount)
     public account: UserAccount;

@@ -3,7 +3,7 @@ import { Logger, LoggerWrapper } from '@ts-core/common';
 import { SelectQueryBuilder } from 'typeorm';
 import { UserEntity } from '../user';
 import { CoinAccounts, CoinId } from '@project/common/coin';
-import { PaymentTransactionEntity } from '../payment';
+import { PaymentEntity, PaymentTransactionEntity } from '../payment';
 import { PaymentAccountId } from '@project/common/payment';
 import { User, UserAccountType, UserResource } from '@project/common/user';
 import { UserNotFoundError } from '@project/module/core/middleware';
@@ -79,11 +79,11 @@ export class DatabaseService extends LoggerWrapper {
         let items = await query
             .where('user.login IN (:...logins)', { logins })
             .andWhere('user.resource = :resource', { resource })
-            .andWhere('userAccount.type IN (:...types)', { types: [UserAccountType.FREE, UserAccountType.DONATER] })
+            .andWhere('userAccount.type IN (:...types)', { types: [UserAccountType.DEFAULT] })
             .getMany();
         return items.map(item => item.id);
     }
-    
+
     public async userListGet(): Promise<Array<UserEntity>> {
         let query = UserEntity.createQueryBuilder('user');
         this.userRelationsAdd(query);
@@ -140,7 +140,7 @@ export class DatabaseService extends LoggerWrapper {
             .select(`SUM(CASE WHEN debet='${account}' THEN amount WHEN credit='${account}' THEN -amount ELSE 0 END)`, 'balance')
             .where(`transaction.coinId = :coinId`, { coinId })
             .andWhere(`transaction.userId = :userId`, { userId })
-            .andWhere(`transaction.activatedDate IS NOT NULL`)
+            .andWhere(`transaction.activated IS NOT NULL`)
             .groupBy('transaction.coinId');
 
         let item = await query.getRawOne();
@@ -153,13 +153,19 @@ export class DatabaseService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    public paymentRelationsAdd<T = any>(query: SelectQueryBuilder<T>): void {
+    public async paymentGet(id: number): Promise<PaymentEntity> {
+        let query = PaymentEntity.createQueryBuilder('payment').where(`payment.id = :id`, { id });
+        this.paymentRelationsAdd(query);
+        return query.getOne();
+    }
+
+    public paymentRelationsAdd<T = any>(query: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
         query.leftJoinAndSelect('payment.user', 'paymentUser');
         query.leftJoinAndSelect('payment.transactions', 'paymentPaymentTransactions');
 
         query.leftJoinAndSelect('paymentUser.account', 'paymentUserAccount');
         query.leftJoinAndSelect('paymentUser.preferences', 'paymentUserPreferences');
-
+        return query;
     }
 
     public paymentTransactionRelationsAdd<T = any>(query: SelectQueryBuilder<T>): void { }

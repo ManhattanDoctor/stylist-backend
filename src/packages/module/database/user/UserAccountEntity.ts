@@ -1,7 +1,7 @@
 import { UserAccount, UserAccountType } from '@project/common/user';
 import { TypeormValidableEntity } from '@ts-core/backend';
 import { Exclude, Type } from 'class-transformer';
-import { IsEnum, IsNumber, IsBoolean, IsOptional } from 'class-validator';
+import { IsEnum, IsNumber, IsBoolean, IsDate, IsOptional } from 'class-validator';
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { UserEntity } from './UserEntity';
 import * as _ from 'lodash';
@@ -17,7 +17,7 @@ export class UserAccountEntity extends TypeormValidableEntity implements UserAcc
 
     public static createEntity(): UserAccountEntity {
         let item = new UserAccountEntity();
-        item.type = UserAccountType.FREE;
+        item.type = UserAccountType.DEFAULT;
         return item;
     }
 

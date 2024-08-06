@@ -1,13 +1,15 @@
-import { TransportCommand } from '@ts-core/common';
 
-export class AiMeanCommand extends TransportCommand<IAiMeanDto> {
+import { ErrorCode } from '@project/common/api';
+import { TransportEvent } from '@ts-core/common';
+
+export class AiMeanedErrorEvent extends TransportEvent<IAiMeanedErrorDto> {
     // --------------------------------------------------------------------------
     //
     //  Static Properties
     //
     // --------------------------------------------------------------------------
 
-    public static readonly NAME = 'AiMeanCommand';
+    public static readonly NAME = 'AiMeanedErrorEvent';
 
     // --------------------------------------------------------------------------
     //
@@ -15,18 +17,17 @@ export class AiMeanCommand extends TransportCommand<IAiMeanDto> {
     //
     // --------------------------------------------------------------------------
 
-    constructor(request: IAiMeanDto) {
-        super(AiMeanCommand.NAME, request);
+    constructor(data: IAiMeanedErrorDto) {
+        super(AiMeanedErrorEvent.NAME, data);
     }
 }
 
+export interface IAiMeanedErrorDto {
+    code: ErrorCode;
+    message: string;
 
-export interface IAiMeanDto {
     userId: number;
+    chatId: number;
     project: string;
-    pictures: Array<string>;
-
-    chatId?: number;
-    chatMessageId?: number;
+    chatMessageId: number;
 }
-

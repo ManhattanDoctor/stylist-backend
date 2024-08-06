@@ -12,10 +12,10 @@ export class Payment {
     transactions: Array<PaymentTransaction>;
 
     @Type(() => Date)
-    createdDate: Date;
+    created: Date;
 
     @Type(() => Date)
-    updatedDate: Date;
+    updated: Date;
 
     @Type(() => User)
     user?: User;
@@ -25,7 +25,7 @@ export class Payment {
 }
 
 export enum PaymentAggregatorType {
-    MONETA = 'MONETA'
+    TELEGRAM = 'TELEGRAM'
 }
 
 export enum PaymentStatus {

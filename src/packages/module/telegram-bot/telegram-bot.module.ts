@@ -5,6 +5,7 @@ import { ITelegramBotSettings, TelegramBotService } from './service';
 import { DatabaseModule } from '@project/module/database';
 import { DatabaseService } from '@project/module/database/service';
 import { MeanHandler } from './transport/handler';
+import { LanguageProjects, LanguageProjectProxy } from '@ts-core/language';
 
 export class TelegramBotModule {
     // --------------------------------------------------------------------------
@@ -23,10 +24,9 @@ export class TelegramBotModule {
             providers: [
                 {
                     provide: TelegramBotService,
-                    inject: [Logger, Transport, DatabaseService],
-                    useFactory: (logger, transport, database) => new TelegramBotService(logger, transport, database, settings)
+                    inject: [Logger, Transport, DatabaseService, LanguageProjects],
+                    useFactory: (logger, transport, database, language) => new TelegramBotService(logger, transport, database, settings, language)
                 },
-
                 MeanHandler
             ]
         };

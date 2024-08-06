@@ -26,7 +26,7 @@ export class PaymentTransactionEntity extends TypeormValidableEntity implements 
         item.amount = amount;
         item.itemId = itemId;
         item.itemType = itemType;
-        item.createdDate = item.activatedDate = new Date();
+        item.created = item.activated = new Date();
 
         switch (type) {
             case PaymentTransactionType.CORRECTION:
@@ -38,13 +38,12 @@ export class PaymentTransactionEntity extends TypeormValidableEntity implements 
             case PaymentTransactionType.REFUND:
             case PaymentTransactionType.PURCHASE:
             case PaymentTransactionType.DAILY_BONUS:
-            case PaymentTransactionType.DONATER_BONUS:
             case PaymentTransactionType.REGISTRATION_BONUS:
                 item.debet = PaymentAccountId.PR_00;
                 item.credit = PaymentAccountId.CO_00;
                 break;
 
-            case PaymentTransactionType.LOOK_ADVICE_PURCHASE:
+            case PaymentTransactionType.SUBSCRIPTION_PURCHASE:
                 item.debet = PaymentAccountId.CO_00;
                 item.credit = PaymentAccountId.PR_00;
                 break;
@@ -92,8 +91,8 @@ export class PaymentTransactionEntity extends TypeormValidableEntity implements 
     @IsNumber()
     public userId: number;
 
-    @CreateDateColumn({ name: 'created_date' })
-    public createdDate: Date;
+    @CreateDateColumn()
+    public created: Date;
 
     @Column({ name: 'payment_id' })
     @IsOptional()
@@ -110,10 +109,10 @@ export class PaymentTransactionEntity extends TypeormValidableEntity implements 
     @IsEnum(PaymentTransactionItemType)
     public itemType?: PaymentTransactionItemType;
 
-    @Column({ name: 'activated_date' })
+    @Column()
     @IsOptional()
     @IsDate()
-    public activatedDate?: Date;
+    public activated?: Date;
 
     @ManyToOne(() => UserEntity, user => user.paymentTransactions)
     @IsOptional()

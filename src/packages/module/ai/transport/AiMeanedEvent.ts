@@ -1,4 +1,3 @@
-
 import { TransportEvent } from '@ts-core/common';
 
 export class AiMeanedEvent extends TransportEvent<IAiMeanedDto> {
@@ -22,10 +21,10 @@ export class AiMeanedEvent extends TransportEvent<IAiMeanedDto> {
 }
 
 export interface IAiMeanedDto {
-    result: string;
-    project: string;
+    meaning: string;
 
     userId: number;
     chatId: number;
+    project: string;
     chatMessageId: number;
 }

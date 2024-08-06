@@ -2,17 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { Logger, LoggerWrapper, ValidateUtil, DateUtil, Transport } from '@ts-core/common';
 import { TgUser } from '@ts-core/oauth';
 import { map, filter, takeUntil } from 'rxjs';
-import { InlineKeyboardButton, EditMessageTextOptions, FileOptions, SendPhotoOptions, SendMessageOptions, Message, ChatId, CallbackQuery } from 'node-telegram-bot-api';
+import { InlineKeyboardButton, EditMessageTextOptions, FileOptions, SendPhotoOptions, SendMessageOptions, SuccessfulPayment, PreCheckoutQuery, Message, ChatId, CallbackQuery } from 'node-telegram-bot-api';
 import { TelegramAccountEntity } from '@project/module/database/telegram';
 import { UserAccountEntity, UserEntity, UserPreferencesEntity } from '@project/module/database/user';
 import { DatabaseService } from '@project/module/database/service';
 import { LoginUtil } from '@project/common/login';
 import { UserAccountType, UserResource, UserStatus } from '@project/common/user';
 import { UserUtil } from '@project/common/util';
-import { LocaleGetCommand } from '@project/module/locale/transport';
 import { ProjectName } from '@project/common';
-import { AiMeanCommand, AiMeanedEvent, IAiMeanedDto } from '@project/module/ai/transport';
+import { AiMeanCommand, AiMeanedEvent, AiMeanedErrorEvent, IAiMeanedDto, IAiMeanedErrorDto } from '@project/module/ai/transport';
 import { Stream } from "stream";
+import { CoinId, CoinUtil } from '@project/common/coin';
+import { PaymentEntity, PaymentTransactionEntity } from '@project/module/database/payment';
+import { PaymentAggregatorType, PaymentStatus, PaymentTransactionType } from '@project/common/payment';
+import { PaymentSucceedEvent } from '@project/module/payment/transport';
+import { ErrorCode } from '@project/common/api';
+import { MeaningAccountEntity } from '@project/module/database/meaning';
+import { LanguageProjects, LanguageProjectProxy } from '@ts-core/language';
 import * as Bot from 'node-telegram-bot-api';
 import * as _ from 'lodash';
 
@@ -21,12 +27,21 @@ export class TelegramBotService extends LoggerWrapper {
 
     // --------------------------------------------------------------------------
     //
+    //  Constants
+    //
+    // --------------------------------------------------------------------------
+
+    private static PAYMENT_SUBSCRIPTION_PRICE = 1;
+
+    // --------------------------------------------------------------------------
+    //
     //  Private Methods
     //
     // --------------------------------------------------------------------------
 
     private _bot: Bot;
-    private progress: Map<number, IProgress>;
+    private language: LanguageProjectProxy;
+    private progress: Map<number, ILock>;
 
     // --------------------------------------------------------------------------
     //
@@ -34,14 +49,16 @@ export class TelegramBotService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    constructor(logger: Logger, private transport: Transport, private database: DatabaseService, private settings: ITelegramBotSettings) {
+    constructor(logger: Logger, private transport: Transport, private database: DatabaseService, private settings: ITelegramBotSettings, language: LanguageProjects) {
         super(logger);
 
         this.progress = new Map();
+        this.language = new LanguageProjectProxy(settings.project, language);
 
-        transport.getDispatcher<AiMeanedEvent>(AiMeanedEvent.NAME).pipe(map(event => event.data), filter(item => item.project === this.project), takeUntil(this.destroyed)).subscribe(this.aiMeanedHandler);
+        transport.getDispatcher<AiMeanedEvent>(AiMeanedEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedHandler);
+        transport.getDispatcher<AiMeanedErrorEvent>(AiMeanedErrorEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedErrorHandler);
 
-        setTimeout(this.initialize, 1 * DateUtil.MILLISECONDS_SECOND);
+        setTimeout(this.initialize, 3 * DateUtil.MILLISECONDS_SECOND);
     }
 
     // --------------------------------------------------------------------------
@@ -51,12 +68,46 @@ export class TelegramBotService extends LoggerWrapper {
     // --------------------------------------------------------------------------
 
     private async sendMasterList(item: UserEntity, message: Message): Promise<void> {
-        let items = [];
-
+        let inline_keyboard = [];
         for (let item of await this.database.userListGet()) {
-            items.push([{ text: `🕺 ${item.preferences.name}`, callback_data: UserUtil.createUid(item) }]);
+            inline_keyboard.push([{ text: `🕺 ${item.preferences.name}`, callback_data: UserUtil.createUid(item) }]);
         }
-        this.sendMessage(message.chat.id, await this.translate('messenger.master.action.list.confirmation'), { reply_markup: { inline_keyboard: items } });
+        this.sendMessage(message.chat.id, this.language.translate('messenger.master.action.list.confirmation'), { reply_markup: { inline_keyboard } });
+    }
+
+    private async sendPaymentSubscriptionInvoice(item: UserEntity, message: Message): Promise<void> {
+        this.bot.sendInvoice(message.chat.id,
+            this.language.translate('messenger.payment.action.subscription.subscription'),
+            this.language.translate('messenger.payment.action.subscription.description'),
+            'payload', this.settings.merchant, CoinId.XTR,
+            [
+                { amount: TelegramBotService.PAYMENT_SUBSCRIPTION_PRICE, label: this.language.translate('messenger.payment.action.subscription.month') }
+            ])
+    }
+
+    private async sendPhotoAdd(item: UserEntity, message: Message): Promise<void> {
+        this.sendMessage(message.chat.id, this.language.translate('messenger.photo.action.add.description'));
+    }
+
+    private async sendMasterSelect(item: UserEntity, message: Message): Promise<void> {
+        let inline_keyboard = [[await this.getMasterListButton()]];
+        this.sendMessage(message.chat.id, this.language.translate('messenger.description'), { reply_markup: { inline_keyboard } });
+    }
+
+    private async sendMeaning(item: UserEntity, message: Message): Promise<void> {
+        let chatId = message.chat.id;
+        let chatMessageId = message.message_id;
+        if (this.isLocked(item.id)) {
+            this.removeMessage(chatId, chatMessageId);
+            this.sendMessage(chatId, this.language.translate(`error.${ErrorCode.AI_MASTER_IN_PROGRESS}`));
+            return;
+        }
+
+        this.lock(item.id, { chatId, expiration: DateUtil.getDate(Date.now() + 3 * DateUtil.MILLISECONDS_MINUTE) });
+
+        let photos = _.sortBy(message.photo, 'file_size');
+        let pictures = [await this.bot.getFileLink(_.last(photos).file_id)];
+        this.sendMessage(chatId, this.language.translate('messenger.master.action.mean.progress')).then(chatMessageId => this.transport.send(new AiMeanCommand({ userId: item.id, project: ProjectName.BOT, pictures, chatId, chatMessageId })));
     }
 
     private async sendDefault(item: UserEntity, message: Message): Promise<void> {
@@ -71,33 +122,6 @@ export class TelegramBotService extends LoggerWrapper {
         }
     }
 
-    private async sendPhotoAdd(item: UserEntity, message: Message): Promise<void> {
-        this.sendMessage(message.chat.id, await this.translate('messenger.photo.action.add.description'));
-    }
-
-    private async sendMasterSelect(item: UserEntity, message: Message): Promise<void> {
-        let items = [
-            [await this.getMasterListButton()]
-        ];
-        this.sendMessage(message.chat.id, await this.translate('messenger.description'), { reply_markup: { inline_keyboard: items } });
-    }
-
-    private async sendMeaning(item: UserEntity, message: Message): Promise<void> {
-        let chatId = message.chat.id;
-        let chatMessageId = message.message_id;
-        if (this.progress.has(item.id)) {
-            this.removeMessage(chatId, chatMessageId);
-            this.sendMessage(chatId, await this.translate('error.AI_MASTER_IN_PROGRESS'));
-            return;
-        }
-
-        this.progress.set(item.id, { chatId, expired: DateUtil.getDate(Date.now() + 3 * DateUtil.MILLISECONDS_MINUTE) });
-
-        let photos = _.sortBy(message.photo, 'file_size');
-        let pictures = [await this.bot.getFileLink(_.last(photos).file_id)];
-        this.sendMessage(chatId, await this.translate('messenger.master.action.mean.progress')).then(chatMessageId => this.transport.send(new AiMeanCommand({ userId: item.id, project: ProjectName.BOT, pictures, chatMessageId })));
-    }
-
     // --------------------------------------------------------------------------
     //
     //  Handler Methods
@@ -110,7 +134,7 @@ export class TelegramBotService extends LoggerWrapper {
         let accountId = user.telegram.accountId;
 
         if (_.isNil(master)) {
-            await this.editMessage(await this.translate('error.USER_NOT_FOUND'), { chat_id: accountId, message_id: message.message_id });
+            this.editMessage(this.language.translate(`error.${ErrorCode.USER_NOT_FOUND}`), { chat_id: accountId, message_id: message.message_id });
             return;
         }
 
@@ -119,7 +143,7 @@ export class TelegramBotService extends LoggerWrapper {
             await user.save();
         }
 
-        let text = await this.translate(`messenger.master.action.list.notification`, { name: master.preferences.name });
+        let text = this.language.translate(`messenger.master.action.list.notification`, { name: master.preferences.name });
         this.editMessage(text, { chat_id: accountId, message_id: message.message_id });
         this.sendPhoto(accountId, master.preferences.picture);
     }
@@ -130,16 +154,21 @@ export class TelegramBotService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-
     private initialize = async (): Promise<void> => {
         this._bot = new Bot(this.settings.token, { polling: this.settings.isPolling });
         this.bot.on('message', this.messageHandler);
         this.bot.on('callback_query', this.callbackHandler);
+        this.bot.on('pre_checkout_query', this.paymentCheckoutHandler);
+        this.bot.on('successful_payment', this.paymentSuccessfulHandler);
 
         this.bot.setMyCommands([
             {
                 command: Commands.MASTER_LIST,
-                description: await this.translate('messenger.master.action.list.list')
+                description: this.language.translate('messenger.master.action.list.list')
+            },
+            {
+                command: Commands.PAYMENT_SUBSCRIPTION,
+                description: this.language.translate('messenger.payment.action.subscription.subscription')
             },
         ]);
     }
@@ -163,7 +192,7 @@ export class TelegramBotService extends LoggerWrapper {
         telegram.accountId = Number(user.id);
 
         let account = (item.account = new UserAccountEntity());
-        account.type = UserAccountType.FREE;
+        account.type = UserAccountType.DEFAULT;
 
         let preferences = (item.preferences = new UserPreferencesEntity());
         preferences.name = user.name;
@@ -172,10 +201,6 @@ export class TelegramBotService extends LoggerWrapper {
 
         ValidateUtil.validate(item);
         return item.save();
-    }
-
-    private async translate<T>(key: string, params?: T): Promise<string> {
-        return this.transport.sendListen(new LocaleGetCommand({ key, params, project: this.settings.project }));
     }
 
     // --------------------------------------------------------------------------
@@ -227,6 +252,32 @@ export class TelegramBotService extends LoggerWrapper {
 
     // --------------------------------------------------------------------------
     //
+    //  Lock Methods
+    //
+    // --------------------------------------------------------------------------
+
+    private lock(id: number, item: ILock): void {
+        this.progress.set(id, item);
+    }
+
+    private unlock(id: number): void {
+        this.progress.delete(id);
+    }
+
+    private isLocked(id: number): boolean {
+        let item = this.progress.get(id);
+        if (_.isNil(item)) {
+            return false;
+        }
+        if (item.expiration.getTime() > Date.now()) {
+            return true;
+        }
+        this.unlock(id);
+        return false;
+    }
+
+    // --------------------------------------------------------------------------
+    //
     //  Event Handlers
     //
     // --------------------------------------------------------------------------
@@ -238,30 +289,82 @@ export class TelegramBotService extends LoggerWrapper {
         if (text?.includes(Commands.MASTER_LIST)) {
             this.sendMasterList(item, message);
         }
+        else if (text?.includes(Commands.PAYMENT_SUBSCRIPTION)) {
+            this.sendPaymentSubscriptionInvoice(item, message);
+        }
         else {
             this.sendDefault(item, message);
         }
     }
 
-    private callbackHandler = async (callbackQuery: CallbackQuery): Promise<void> => {
-        let item = await this.userGet(callbackQuery.message);
-        let action = callbackQuery.data;
-        let message = callbackQuery.message;
-        if (action === Commands.MASTER_LIST) {
-            this.sendMasterList(item, message);
+    private paymentSuccessfulHandler = async (item: Message): Promise<void> => {
+        let params = item.successful_payment;
+
+        let user = await this.userGet(item);
+        let userId = user.id;
+        let coinId = params.currency as CoinId;
+        let amount = CoinUtil.toCent(params.total_amount.toString(), coinId);
+
+        let payment = new PaymentEntity();
+        payment.userId = user.id;
+        payment.project = this.project;
+        payment.status = PaymentStatus.COMPLETED;
+        payment.details = JSON.stringify(params);
+        payment.aggregator = PaymentAggregatorType.TELEGRAM;
+        payment.transactions = [PaymentTransactionEntity.createEntity(userId, PaymentTransactionType.PURCHASE, coinId, amount)];
+        payment.transactionId = params.provider_payment_charge_id;
+        await payment.save();
+
+        this.transport.dispatch(new PaymentSucceedEvent(payment.id));
+    }
+
+    private paymentCheckoutHandler = async (item: PreCheckoutQuery): Promise<void> => {
+        this.bot.answerPreCheckoutQuery(item.id, true);
+    }
+
+    private callbackHandler = async (item: CallbackQuery): Promise<void> => {
+        let { data, message } = item;
+        let user = await this.userGet(message);
+
+        if (data === Commands.MASTER_LIST) {
+            this.sendMasterList(user, message);
         }
-        else if (UserUtil.isUser(action)) {
-            this.masterSelected(message, UserUtil.getUid(action));
+        else if (data === Commands.PAYMENT_SUBSCRIPTION) {
+            this.sendPaymentSubscriptionInvoice(user, message);
+        }
+        else if (UserUtil.isUser(data)) {
+            this.masterSelected(message, UserUtil.getUid(data));
         }
         else {
 
         }
     }
 
-    private aiMeanedHandler = async (params: IAiMeanedDto): Promise<void> => {
-        this.progress.delete(params.userId);
+    private aiMeanedFilter = (params: IAiMeanedDto | IAiMeanedErrorDto): boolean => params.project === this.project;
+
+    private aiMeanedErrorHandler = async (params: IAiMeanedErrorDto): Promise<void> => {
+        this.unlock(params.userId);
         await this.removeMessage(params.chatId, params.chatMessageId);
-        await this.sendMessage(params.chatId, params.result);
+
+        let options: SendMessageOptions = undefined;
+        let { message } = params;
+        if (params.code === ErrorCode.MEANINGS_AMOUNT_EXCEED) {
+            let account = await MeaningAccountEntity.getEntity(params.userId, params.project);
+            if (_.isNil(account) || account.isExpired) {
+                message = this.language.translate('messenger.payment.action.subscription.description');
+                options = { reply_markup: { inline_keyboard: [[await this.getPaymentSubscriptionButton()]] } };
+            }
+            else {
+                message = this.language.translate('messenger.payment.action.subscription.bought');
+            }
+        }
+        await this.sendMessage(params.chatId, message, options);
+    }
+
+    private aiMeanedHandler = async (params: IAiMeanedDto): Promise<void> => {
+        this.unlock(params.userId);
+        await this.removeMessage(params.chatId, params.chatMessageId);
+        await this.sendMessage(params.chatId, params.meaning);
     }
 
     // --------------------------------------------------------------------------
@@ -271,7 +374,11 @@ export class TelegramBotService extends LoggerWrapper {
     // --------------------------------------------------------------------------
 
     private async getMasterListButton(): Promise<InlineKeyboardButton> {
-        return { text: `🃏 ${await this.translate('messenger.master.action.list.list')}`, callback_data: Commands.MASTER_LIST };
+        return { text: `🃏 ${this.language.translate('messenger.master.action.list.list')}`, callback_data: Commands.MASTER_LIST };
+    }
+
+    private async getPaymentSubscriptionButton(): Promise<InlineKeyboardButton> {
+        return { text: `🃏 ${this.language.translate('messenger.payment.action.subscription.subscription')}`, callback_data: Commands.PAYMENT_SUBSCRIPTION };
     }
 
     // --------------------------------------------------------------------------
@@ -291,16 +398,19 @@ export class TelegramBotService extends LoggerWrapper {
 
 enum Commands {
     START = 'start',
-    MASTER_LIST = 'master_list'
+    MASTER_LIST = 'master_list',
+    PAYMENT_SUBSCRIPTION = 'payment_subscription'
 }
 
-interface IProgress {
+interface ILock {
     chatId: number;
-    expired: Date;
+    expiration: Date;
 }
 
 export interface ITelegramBotSettings {
     token: string;
+    merchant: string;
+
     project: string;
     isPolling?: boolean;
 }

@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { User, UserMasterLevel } from '@project/common/user';
 import { Transport, Logger, LoggerWrapper } from '@ts-core/common';
 import { ParseUtil } from '@project/common/util';
-import { LocaleGetCommand } from '@project/module/locale/transport';
 import * as _ from 'lodash';
+import { LanguageProjects } from '@ts-core/language';
 
 @Injectable()
 export class AiPromptService extends LoggerWrapper {
@@ -14,7 +14,7 @@ export class AiPromptService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    constructor(logger: Logger, private transport: Transport) {
+    constructor(logger: Logger, private transport: Transport, private language: LanguageProjects) {
         super(logger);
     }
 
@@ -24,26 +24,24 @@ export class AiPromptService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    private async getTask(project: string, user: User, master: User, translation: any): Promise<string> {
-        return this.translate(project, 'prompt.tarot.spread.meaning.task', translation);
+    private getTask(project: string, user: User, master: User, translation: any): string {
+        return this.language.translate('prompt.tarot.spread.meaning.task', translation, project);
     }
 
-    private async getExample(project: string, user: User, master: User, translation: any): Promise<string> {
-        return this.translate(project, 'prompt.tarot.spread.meaning.example', translation);
+    private getExample(project: string, user: User, master: User, translation: any): string {
+        return this.language.translate('prompt.tarot.spread.meaning.example', translation, project);
     }
 
-    private async getRole(project: string, user: User, master: User, translation: any): Promise<string> {
-        let role = master?.master?.role;
-        return !_.isNil(role) ? role : this.translate(project, 'prompt.tarot.spread.meaning.role', translation);
+    private getRole(project: string, user: User, master: User, translation: any): string {
+        return master.master.role;
     }
 
-    private async getManner(project: string, user: User, master: User, translation: any): Promise<string> {
-        let manner = master?.master?.manner;
-        return !_.isNil(manner) ? manner : this.translate(project, 'prompt.tarot.spread.meaning.manner', translation);
+    private getManner(project: string, user: User, master: User, translation: any): string {
+        return master?.master?.manner;
     }
 
-    private async getContext(project: string, user: User, master: User, translation: any): Promise<string> {
-        return this.translate(project, 'prompt.tarot.spread.meaning.context', translation);
+    private getContext(project: string, user: User, master: User, translation: any): string {
+        return this.language.translate('prompt.tarot.spread.meaning.context', translation, project);
     }
 
     // --------------------------------------------------------------------------
@@ -68,10 +66,6 @@ export class AiPromptService extends LoggerWrapper {
         return true;
     }
 
-    private async translate<T>(project: string, key: string, params: T): Promise<string> {
-        return this.transport.sendListen(new LocaleGetCommand({ key, params, project }));
-    }
-
     // --------------------------------------------------------------------------
     //
     //  Mean Methods
@@ -87,11 +81,11 @@ export class AiPromptService extends LoggerWrapper {
             userIsMale: user.preferences.isMale,
         }
 
-        let role = await this.getRole(project, user, master, translation);
-        let task = await this.getTask(project, user, master, translation);
-        let manner = await this.getManner(project, user, master, translation);
-        let example = await this.getExample(project, user, master, translation);
-        let context = await this.getContext(project, user, master, translation);
+        let role = this.getRole(project, user, master, translation);
+        let task = this.getTask(project, user, master, translation);
+        let manner = this.getManner(project, user, master, translation);
+        let example = this.getExample(project, user, master, translation);
+        let context = this.getContext(project, user, master, translation);
 
         return { model: model.name, user: removeTags(`${task} ${example} ${manner}`), system: removeTags(`${role} ${context}`), role, task, manner, example, context, pictures };
     }

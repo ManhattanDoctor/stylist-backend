@@ -15,12 +15,12 @@ export class PaymentTransaction implements ICoinAmount {
     itemType?: PaymentTransactionItemType;
 
     @Type(() => Date)
-    createdDate: Date;
+    created: Date;
 
     paymentId?: number;
 
     @Type(() => Date)
-    activatedDate?: Date;
+    activated?: Date;
 }
 
 export enum PaymentTransactionItemType {
@@ -34,5 +34,5 @@ export enum PaymentTransactionType {
     DAILY_BONUS = 'DAILY_BONUS',
     DONATER_BONUS = 'DONATER_BONUS',
     REGISTRATION_BONUS = 'REGISTRATION_BONUS',
-    LOOK_ADVICE_PURCHASE = 'LOOK_ADVICE_PURCHASE'
+    SUBSCRIPTION_PURCHASE = 'SUBSCRIPTION_PURCHASE'
 }

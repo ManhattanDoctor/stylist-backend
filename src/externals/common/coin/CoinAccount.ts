@@ -9,10 +9,10 @@ export class CoinAccount implements ICoinAmount {
     userId: number;
 
     @Type(() => Date)
-    createdDate: Date;
+    created: Date;
 
     @Type(() => Date)
-    updatedDate: Date;
+    updated: Date;
 
     @Type(() => User)
     user?: User;

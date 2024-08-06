@@ -28,11 +28,11 @@ export class TelegramAccountEntity extends TypeormValidableEntity {
     @IsOptional()
     public userId?: number;
 
-    @CreateDateColumn({ name: 'created_date' })
-    public createdDate: Date;
+    @CreateDateColumn()
+    public created: Date;
 
-    @UpdateDateColumn({ name: 'updated_date' })
-    public updatedDate: Date;
+    @UpdateDateColumn()
+    public updated: Date;
 
     @Exclude()
     @OneToOne(() => UserEntity, user => user.telegram)

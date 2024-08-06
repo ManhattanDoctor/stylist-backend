@@ -7,8 +7,8 @@ import { UserEntity } from '../user';
 import { CoinAccount, CoinId } from '@project/common/coin';
 import * as _ from 'lodash';
 
-@Entity({ name: 'coin_account' })
-export class CoinAccountEntity extends TypeormValidableEntity implements CoinAccount {
+@Entity({ name: 'meaning' })
+export class MeaningEntity extends TypeormValidableEntity {
 
     // --------------------------------------------------------------------------
     //
@@ -16,10 +16,10 @@ export class CoinAccountEntity extends TypeormValidableEntity implements CoinAcc
     //
     // --------------------------------------------------------------------------
 
-    public static createEntity(userId: number, coinId: CoinId): CoinAccountEntity {
-        let item = new CoinAccountEntity();
+    public static createEntity(userId: number, project: string): MeaningEntity {
+        let item = new MeaningEntity();
         item.userId = userId;
-        item.coinId = coinId;
+        item.project = project;
         return item;
     }
 
@@ -35,25 +35,18 @@ export class CoinAccountEntity extends TypeormValidableEntity implements CoinAcc
     @IsNumber()
     public id: number;
 
-    @Column()
-    @IsString()
-    public amount: string;
-
-    @Column({ type: 'varchar', name: 'coin_id' })
-    @IsEnum(CoinId)
-    public coinId: CoinId;
-
     @Column({ name: 'user_id' })
     @IsNumber()
     public userId: number;
 
+    @Column()
+    @IsString()
+    public project: string;
+
     @CreateDateColumn({ name: 'created' })
     public created: Date;
 
-    @UpdateDateColumn({ name: 'updated' })
-    public updated: Date;
-
-    @ManyToOne(() => UserEntity, user => user.coinAccounts)
+    @ManyToOne(() => UserEntity, user => user.meanings)
     @IsOptional()
     @ValidateNested()
     @JoinColumn({ name: "user_id" })

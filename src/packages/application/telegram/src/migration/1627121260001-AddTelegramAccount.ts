@@ -16,12 +16,12 @@ export class AddTelegramAccount1627121260001 implements MigrationInterface {
 
                 "user_id" integer
                     constraint "telegram_account_user_id_key" unique
-                    constraint "telegram_account_user_id_fkey" references "user",
+                    constraint "telegram_account_user_id_fkey" references "user" on delete cascade,
                     
                 "account_id" bigint not null,
 
-                "created_date" timestamp default now() not null,
-                "updated_date" timestamp default now() not null
+                "created" timestamp default now() not null,
+                "updated" timestamp default now() not null
             );
         `;
         await queryRunner.query(sql);

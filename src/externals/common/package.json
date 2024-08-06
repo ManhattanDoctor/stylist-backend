@@ -6,7 +6,7 @@
     "author": "Renat Gubaev",
     "license": "ISC",
     "dependencies": {
-        "@ts-core/language": "~3.0.25",
+        "@ts-core/language": "~3.0.26",
         "@ts-core/common": "~3.0.53",
         "@ts-core/oauth": "~3.1.9"
     },

@@ -1,13 +1,13 @@
-import { TransportCommandAsync } from '@ts-core/common';
+import { TransportEvent } from '@ts-core/common';
 
-export class LocaleGetCommand extends TransportCommandAsync<ILocaleGetDto, string> {
+export class PaymentSucceedEvent extends TransportEvent<number> {
     // --------------------------------------------------------------------------
     //
     //  Static Properties
     //
     // --------------------------------------------------------------------------
 
-    public static readonly NAME = 'LocaleGetCommand';
+    public static readonly NAME = 'PaymentSucceedEvent';
 
     // --------------------------------------------------------------------------
     //
@@ -15,13 +15,7 @@ export class LocaleGetCommand extends TransportCommandAsync<ILocaleGetDto, strin
     //
     // --------------------------------------------------------------------------
 
-    constructor(request: ILocaleGetDto) {
-        super(LocaleGetCommand.NAME, request);
+    constructor(data: number) {
+        super(PaymentSucceedEvent.NAME, data);
     }
-}
-export interface ILocaleGetDto<T = any> {
-    key: string;
-    project: string;
-    params?: T;
-    locale?: string;
 }

@@ -16,7 +16,7 @@ export class AddDefaultMaster1627121260000 implements MigrationInterface {
 
     public createMaster(name: string, isMale: boolean, picture: string, role: string, manner: string): UserEntity {
         let item = new UserEntity();
-        item.login = LoginUtil.createLogin(`${RandomUtil.randomNumber(0, 1000)}`, UserResource.GOOGLE);
+        item.login = LoginUtil.createLogin(`${RandomUtil.randomNumber(0, 10000)}`, UserResource.GOOGLE);
         item.status = UserStatus.ACTIVE;
         item.resource = UserResource.GOOGLE;
 
@@ -64,8 +64,9 @@ export class AddDefaultMaster1627121260000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<any> {
         let repository = queryRunner.connection.getRepository(UserEntity);
 
-        await repository.save(this.createMaster('Карл Лагерфельд', true, 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Karl_Lagerfeld_2014.jpg', 'Тебя зовут Карл Лагерфельд, ты добрый и благостный дедушка. Ты модельер, дизайнер одежды, стилист и кутюрье.', 'Пиши в добром и заботливом тоне.'));
-        await repository.save(this.createMaster('Коко Шанель', false, 'https://upload.wikimedia.org/wikipedia/commons/2/22/Coco_Chanel_in_Los_Angeles%2C_1931_%28cropped%29.jpg', 'Тебя зовут Коко Шанель, ты злая и вечно недовольная старуха. Ты модельер, дизайнер одежды, стилист и кутюрье.', 'Пиши в злобном, раздраженном и истеричном тоне.'));
+        await repository.save(this.createMaster('Карл Лагерфельд (добрый)', true, 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Karl_Lagerfeld_2014.jpg', 'Тебя зовут Карл Лагерфельд, ты добрый и благостный дедушка. Ты модельер, дизайнер одежды, стилист и кутюрье.', 'Пиши в добром и заботливом тоне.'));
+        await repository.save(this.createMaster('Коко Шанель (злая)', false, 'https://upload.wikimedia.org/wikipedia/commons/2/22/Coco_Chanel_in_Los_Angeles%2C_1931_%28cropped%29.jpg', 'Тебя зовут Коко Шанель, ты злая и вечно недовольная старуха. Ты модельер, дизайнер одежды, стилист и кутюрье.', 'Пиши в злобном, раздраженном и истеричном тоне.'));
+        await repository.save(this.createMaster('Ральф Лорен (объективный)', true, 'https://upload.wikimedia.org/wikipedia/commons/8/86/RalphLauren.jpg', 'Тебя зовут Ральф Лорен, ты объективный и беспристрастный мужчина. Ты модельер, дизайнер одежды, стилист и кутюрье.', 'Пиши в корректной, вежливом и тактичном тоне. Дай честный совет по итогу разбора.'));
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> { }

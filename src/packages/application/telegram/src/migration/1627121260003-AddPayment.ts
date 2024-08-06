@@ -15,16 +15,17 @@ export class AddPayment1627121260003 implements MigrationInterface {
                     constraint "payment_id_pkey" primary key,
 
                 "user_id" integer not null
-                    constraint "payment_user_id_fkey" references "user",
+                    constraint "payment_user_id_fkey" references "user" on delete cascade,
 
                 "status" varchar not null,
+                "project" varchar not null,
                 "aggregator" varchar not null,
 
                 "details" json,
                 "transaction_id" varchar,
 
-                "created_date" timestamp default now() not null,
-                "updated_date" timestamp default now() not null
+                "created" timestamp default now() not null,
+                "updated" timestamp default now() not null
             );
 
             create table if not exists "payment_transaction"
@@ -33,19 +34,18 @@ export class AddPayment1627121260003 implements MigrationInterface {
                     constraint "payment_transaction_pkey" primary key,
 
                 "user_id" integer not null
-                    constraint "payment_transaction_user_id_fkey" references "user",
+                    constraint "payment_transaction_user_id_fkey" references "user" on delete cascade,
 
                 "payment_id" integer
-                    constraint "payment_transaction_payment_id_fkey" references "payment",
+                    constraint "payment_transaction_payment_id_fkey" references "payment" on delete cascade,
 
                 "type" varchar not null,
                 "debet" varchar not null,
                 "credit" varchar not null,
                 "amount" numeric not null,
                 "coin_id" varchar not null,
-                "created_date" timestamp default now() not null,
-
-                "activated_date" timestamp,
+                "created" timestamp default now() not null,
+                "activated" timestamp,
 
                 "item_id" integer,
                 "item_type" varchar

@@ -1,5 +1,6 @@
 export enum CoinId {
     RUB = 'RUB',
+    XTR = 'XTR',
     TOKEN = 'TOKEN',
 }
 

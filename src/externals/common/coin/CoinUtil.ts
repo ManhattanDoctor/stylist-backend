@@ -10,6 +10,7 @@ export class CoinUtil {
     // --------------------------------------------------------------------------
 
     public static TOKEN_RUB_RATE = '1000';
+    public static TOKEN_XTR_RATE = '5';
 
     // --------------------------------------------------------------------------
     //
@@ -21,6 +22,7 @@ export class CoinUtil {
         switch (coinId) {
             case CoinId.RUB:
                 return 2;
+            case CoinId.XTR:
             case CoinId.TOKEN:
                 return 0;
             default:
@@ -33,6 +35,10 @@ export class CoinUtil {
         switch (coinId) {
             case CoinId.RUB:
                 rate = CoinUtil.TOKEN_RUB_RATE;
+                break;
+            case CoinId.XTR:
+                rate = CoinUtil.TOKEN_XTR_RATE;
+                break;
         }
         if (_.isNil(rate)) {
             throw new ExtendedError(`Unable convert "${CoinId.TOKEN}" to "${coinId}": rate in undefined`);
@@ -45,6 +51,9 @@ export class CoinUtil {
         switch (coinId) {
             case CoinId.RUB:
                 rate = CoinUtil.TOKEN_RUB_RATE;
+            case CoinId.XTR:
+                rate = CoinUtil.TOKEN_XTR_RATE;
+                break;
         }
         if (_.isNil(rate)) {
             throw new ExtendedError(`Unable convert "${coinId}" to "${CoinId.TOKEN}": rate in undefined`);

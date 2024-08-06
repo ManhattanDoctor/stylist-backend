@@ -26,10 +26,6 @@ export class PermissionUtil {
         return !_.isNil(item) && !_.isNil(item.account) ? item.account.type === UserAccountType.MASTER : false;
     }
 
-    public static userIsDonater(item: User): boolean {
-        return !_.isNil(item) && !_.isNil(item.account) ? item.account.type === UserAccountType.DONATER : false;
-    }
-
     public static userIsAdministrator(item: User): boolean {
         return !_.isNil(item) && !_.isNil(item.account) ? item.account.type === UserAccountType.ADMINISTRATOR : false;
     }

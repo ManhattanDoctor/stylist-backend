@@ -18,7 +18,7 @@ export class AddUser1627121260000 implements MigrationInterface {
                 "resource" varchar not null,
                 "status" varchar not null,
                 "last_login" timestamp,
-                "created_date" timestamp default now() not null
+                "created" timestamp default now() not null
             );
 
             create table if not exists "user_account"
@@ -27,7 +27,7 @@ export class AddUser1627121260000 implements MigrationInterface {
                     constraint "user_account_id_pkey" primary key,
                 "user_id" integer
                     constraint "user_account_user_id_key" unique
-                    constraint "user_account_user_id_fkey" references "user",
+                    constraint "user_account_user_id_fkey" references "user" on delete cascade,
                 "type" varchar not null,
                 "is_disable_bonuses" boolean
             );
@@ -38,7 +38,7 @@ export class AddUser1627121260000 implements MigrationInterface {
                     constraint "user_preferences_id_pkey" primary key,
                 "user_id" integer
                     constraint "user_preferences_user_id_key" unique
-                    constraint "user_preferences_user_id_fkey" references "user",
+                    constraint "user_preferences_user_id_fkey" references "user" on delete cascade,
                 "name" varchar not null,
                 "phone" varchar,
                 "email" varchar,
@@ -59,7 +59,6 @@ export class AddUser1627121260000 implements MigrationInterface {
 
                 "favorite_master_id" integer
                     constraint "user_preferences_favorite_master_id_fkey" references "user"
-
             );
 
             create table if not exists "user_statistics"
@@ -68,7 +67,7 @@ export class AddUser1627121260000 implements MigrationInterface {
                     constraint "user_statistics_id_pkey" primary key,
                 "user_id" integer
                     constraint "user_statistics_user_id_key" unique
-                    constraint "user_statistics_user_id_fkey" references "user"
+                    constraint "user_statistics_user_id_fkey" references "user" on delete cascade
             );
 
             create table if not exists "user_master"
@@ -77,7 +76,7 @@ export class AddUser1627121260000 implements MigrationInterface {
                     constraint "user_master_id_pkey" primary key,
                 "user_id" integer
                     constraint "user_master_user_id_key" unique
-                    constraint "user_master_user_id_fkey" references "user",
+                    constraint "user_master_user_id_fkey" references "user" on delete cascade,
                 "voice" varchar not null,
                 "level" varchar not null,
                 "status" varchar not null,
