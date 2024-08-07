@@ -356,7 +356,9 @@ export class TelegramBotService extends LoggerWrapper {
         this.log('user loaded');
         this.log(data === Commands.MASTER_LIST);
         this.log(data === Commands.PAYMENT_SUBSCRIPTION);
-        this.log(UserUtil.isUser(data));
+
+        console.log(data);
+        console.log(UserUtil.isUser(data), typeof UserUtil.isUser(data));
         if (data === Commands.MASTER_LIST) {
             this.sendMasterList(user, message);
         }
@@ -364,7 +366,7 @@ export class TelegramBotService extends LoggerWrapper {
             this.sendPaymentSubscriptionInvoice(user, message);
         }
         else if (UserUtil.isUser(data)) {
-            this.log('masterSelected');
+            console.log('masterSelected');
             this.masterSelected(message, UserUtil.getUid(data));
         }
         else {
