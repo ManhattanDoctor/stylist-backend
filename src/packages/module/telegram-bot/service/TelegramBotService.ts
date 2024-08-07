@@ -349,6 +349,7 @@ export class TelegramBotService extends LoggerWrapper {
     }
 
     private callbackHandler = async (item: CallbackQuery): Promise<void> => {
+        this.log('callbackHandler', item.data);
         let { data, message } = item;
         let user = await this.userGet(message);
 
