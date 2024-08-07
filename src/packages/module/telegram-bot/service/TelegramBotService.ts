@@ -137,8 +137,11 @@ export class TelegramBotService extends LoggerWrapper {
     // --------------------------------------------------------------------------
 
     private masterSelected = async (message: Message, uid: string): Promise<void> => {
+        this.log('1');
         let user = await this.userGet(message);
+        this.log('2');
         let master = await this.database.userGet(parseInt(uid), true);
+        this.log('3');
         let accountId = user.telegram.accountId;
 
         if (_.isNil(master)) {
@@ -151,9 +154,10 @@ export class TelegramBotService extends LoggerWrapper {
             await user.save();
         }
 
+        this.log('5');
         let text = this.language.translate(`messenger.master.action.list.notification`, { name: master.preferences.name });
         this.editMessage(text, { chat_id: accountId, message_id: message.message_id });
-        // this.sendPhoto(accountId, master.preferences.picture);
+        this.sendPhoto(accountId, master.preferences.picture);
     }
 
     // --------------------------------------------------------------------------
