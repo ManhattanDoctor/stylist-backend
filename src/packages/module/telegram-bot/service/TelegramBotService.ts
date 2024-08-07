@@ -136,7 +136,7 @@ export class TelegramBotService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    private masterSelected = async (message: Message, uid: string): Promise<void> => {
+    private async masterSelected(message: Message, uid: string): Promise<void> {
         this.log('0');
         this.log('1');
         let user = await this.userGet(message);
@@ -349,11 +349,13 @@ export class TelegramBotService extends LoggerWrapper {
     }
 
     private callbackHandler = async (item: CallbackQuery): Promise<void> => {
-        this.log(`callbackHandler "${item.data}"`);
         let { data, message } = item;
+        this.log(`callbackHandler "${data}"`);
         this.log('user loading');
         let user = await this.userGet(message);
         this.log('user loaded');
+        this.log(data === Commands.MASTER_LIST);
+        this.log(data === Commands.PAYMENT_SUBSCRIPTION);
         this.log(UserUtil.isUser(data));
         if (data === Commands.MASTER_LIST) {
             this.sendMasterList(user, message);
@@ -366,7 +368,7 @@ export class TelegramBotService extends LoggerWrapper {
             this.masterSelected(message, UserUtil.getUid(data));
         }
         else {
-
+            console.log('do nothing')
         }
     }
 
