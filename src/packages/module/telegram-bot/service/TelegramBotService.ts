@@ -137,6 +137,7 @@ export class TelegramBotService extends LoggerWrapper {
     // --------------------------------------------------------------------------
 
     private masterSelected = async (message: Message, uid: string): Promise<void> => {
+        this.log('0');
         this.log('1');
         let user = await this.userGet(message);
         this.log('2');
@@ -157,6 +158,7 @@ export class TelegramBotService extends LoggerWrapper {
         this.log('5');
         let text = this.language.translate(`messenger.master.action.list.notification`, { name: master.preferences.name });
         this.editMessage(text, { chat_id: accountId, message_id: message.message_id });
+        this.log('6');
         this.sendPhoto(accountId, master.preferences.picture);
     }
 
