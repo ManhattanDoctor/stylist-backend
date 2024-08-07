@@ -111,13 +111,13 @@ export class TelegramBotService extends LoggerWrapper {
         }
 
         let pictures = await this.getPicturesUrls(message);
-        if(_.isEmpty(pictures)) {
+        if (_.isEmpty(pictures)) {
             this.removeMessage(chatId, chatMessageId);
             this.sendMessage(chatId, this.language.translate(`error.${ErrorCode.PICTURES_INVALID}`));
             return;
         }
 
-        this.lock(item.id, { chatId, expiration: DateUtil.getDate(Date.now() + 3 * DateUtil.MILLISECONDS_MINUTE) });
+        this.lock(item.id, { chatId, expiration: DateUtil.getDate(Date.now() + DateUtil.MILLISECONDS_MINUTE) });
         this.sendMessage(chatId, this.language.translate('messenger.master.action.mean.progress')).then(chatMessageId => this.transport.send(new AiMeanCommand({ userId: item.id, project: ProjectName.BOT, pictures, chatId, chatMessageId })));
     }
 
@@ -153,7 +153,7 @@ export class TelegramBotService extends LoggerWrapper {
 
         let text = this.language.translate(`messenger.master.action.list.notification`, { name: master.preferences.name });
         this.editMessage(text, { chat_id: accountId, message_id: message.message_id });
-        this.sendPhoto(accountId, master.preferences.picture);
+        // this.sendPhoto(accountId, master.preferences.picture);
     }
 
     // --------------------------------------------------------------------------
@@ -291,6 +291,7 @@ export class TelegramBotService extends LoggerWrapper {
         if (item.expiration.getTime() > Date.now()) {
             return true;
         }
+        this.sendMessage(item.chatId, this.language.translate(`error.${ErrorCode.MEANING_FROZE}`));
         this.unlock(id);
         return false;
     }
