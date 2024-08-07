@@ -362,6 +362,7 @@ export class TelegramBotService extends LoggerWrapper {
             this.sendPaymentSubscriptionInvoice(user, message);
         }
         else if (UserUtil.isUser(data)) {
+            this.log('masterSelected');
             this.masterSelected(message, UserUtil.getUid(data));
         }
         else {
