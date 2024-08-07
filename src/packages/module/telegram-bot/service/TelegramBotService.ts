@@ -97,25 +97,33 @@ export class TelegramBotService extends LoggerWrapper {
     private async sendMeaning(item: UserEntity, message: Message): Promise<void> {
         let chatId = message.chat.id;
         let chatMessageId = message.message_id;
+
         if (this.isLocked(item.id)) {
             this.removeMessage(chatId, chatMessageId);
             this.sendMessage(chatId, this.language.translate(`error.${ErrorCode.AI_MASTER_IN_PROGRESS}`));
             return;
         }
 
-        this.lock(item.id, { chatId, expiration: DateUtil.getDate(Date.now() + 3 * DateUtil.MILLISECONDS_MINUTE) });
+        if (_.isEmpty(message.photo) && _.isEmpty(message.document)) {
+            this.removeMessage(chatId, chatMessageId);
+            this.sendPhotoAdd(item, message);
+            return;
+        }
 
-        let photos = _.sortBy(message.photo, 'file_size');
-        let pictures = [await this.bot.getFileLink(_.last(photos).file_id)];
+        let pictures = await this.getPicturesUrls(message);
+        if(_.isEmpty(pictures)) {
+            this.removeMessage(chatId, chatMessageId);
+            this.sendMessage(chatId, this.language.translate(`error.${ErrorCode.PICTURES_INVALID}`));
+            return;
+        }
+
+        this.lock(item.id, { chatId, expiration: DateUtil.getDate(Date.now() + 3 * DateUtil.MILLISECONDS_MINUTE) });
         this.sendMessage(chatId, this.language.translate('messenger.master.action.mean.progress')).then(chatMessageId => this.transport.send(new AiMeanCommand({ userId: item.id, project: ProjectName.BOT, pictures, chatId, chatMessageId })));
     }
 
     private async sendDefault(item: UserEntity, message: Message): Promise<void> {
         if (_.isNil(item.preferences.favoriteMasterId)) {
             this.sendMasterSelect(item, message);
-        }
-        else if (_.isEmpty(message.photo)) {
-            this.sendPhotoAdd(item, message);
         }
         else {
             this.sendMeaning(item, message);
@@ -201,6 +209,17 @@ export class TelegramBotService extends LoggerWrapper {
 
         ValidateUtil.validate(item);
         return item.save();
+    }
+
+    private async getPicturesUrls(message: Message): Promise<Array<string>> {
+        let item = null;
+        if (!_.isEmpty(message.photo)) {
+            item = _.last(_.sortBy(message.photo, 'file_size'));
+        }
+        else if (!_.isNil(message.document) && FileImageMime.includes(message.document.mime_type)) {
+            item = message.document;
+        }
+        return !_.isNil(item) ? [await this.bot.getFileLink(item.file_id)] : null;
     }
 
     // --------------------------------------------------------------------------
@@ -358,13 +377,13 @@ export class TelegramBotService extends LoggerWrapper {
                 message = this.language.translate('messenger.payment.action.subscription.bought');
             }
         }
-        await this.sendMessage(params.chatId, message, options);
+        this.sendMessage(params.chatId, message, options);
     }
 
     private aiMeanedHandler = async (params: IAiMeanedDto): Promise<void> => {
         this.unlock(params.userId);
         await this.removeMessage(params.chatId, params.chatMessageId);
-        await this.sendMessage(params.chatId, params.meaning);
+        this.sendMessage(params.chatId, params.meaning);
     }
 
     // --------------------------------------------------------------------------
@@ -401,6 +420,8 @@ enum Commands {
     MASTER_LIST = 'master_list',
     PAYMENT_SUBSCRIPTION = 'payment_subscription'
 }
+
+let FileImageMime = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface ILock {
     chatId: number;
