@@ -5,7 +5,7 @@ import { ITelegramBotSettings, TelegramBotService } from './service';
 import { DatabaseModule } from '@project/module/database';
 import { DatabaseService } from '@project/module/database/service';
 import { MeanHandler } from './transport/handler';
-import { LanguageProjects, LanguageProjectProxy } from '@ts-core/language';
+import { LanguageProjects } from '@ts-core/language';
 
 export class TelegramBotModule {
     // --------------------------------------------------------------------------

@@ -75,6 +75,11 @@ export class TelegramBotService extends LoggerWrapper {
         this.sendMessage(message.chat.id, this.language.translate('messenger.master.action.list.confirmation'), { reply_markup: { inline_keyboard } });
     }
 
+    private async sendContact(item: UserEntity, message: Message): Promise<void> {
+        let inline_keyboard = [[this.getContactButton()]];
+        this.sendMessage(message.chat.id, this.language.translate('messenger.contact.description'), { reply_markup: { inline_keyboard } });
+    }
+
     private async sendPaymentSubscriptionInvoice(item: UserEntity, message: Message): Promise<void> {
         this.bot.sendInvoice(message.chat.id,
             this.language.translate('messenger.payment.action.subscription.subscription'),
@@ -90,7 +95,7 @@ export class TelegramBotService extends LoggerWrapper {
     }
 
     private async sendMasterSelect(item: UserEntity, message: Message): Promise<void> {
-        let inline_keyboard = [[await this.getMasterListButton()]];
+        let inline_keyboard = [[this.getMasterListButton()]];
         this.sendMessage(message.chat.id, this.language.translate('messenger.description'), { reply_markup: { inline_keyboard } });
     }
 
@@ -137,12 +142,8 @@ export class TelegramBotService extends LoggerWrapper {
     // --------------------------------------------------------------------------
 
     private async masterSelected(message: Message, uid: string): Promise<void> {
-        this.log('0');
-        this.log('1');
         let user = await this.userGet(message);
-        this.log('2');
         let master = await this.database.userGet(parseInt(uid), true);
-        this.log('3');
         let accountId = user.telegram.accountId;
 
         if (_.isNil(master)) {
@@ -155,10 +156,8 @@ export class TelegramBotService extends LoggerWrapper {
             await user.save();
         }
 
-        this.log('5');
         let text = this.language.translate(`messenger.master.action.list.notification`, { name: master.preferences.name });
         this.editMessage(text, { chat_id: accountId, message_id: message.message_id });
-        this.log('6');
         this.sendPhoto(accountId, master.preferences.picture);
     }
 
@@ -183,6 +182,10 @@ export class TelegramBotService extends LoggerWrapper {
             {
                 command: Commands.PAYMENT_SUBSCRIPTION,
                 description: this.language.translate('messenger.payment.action.subscription.subscription')
+            },
+            {
+                command: Commands.CONTACT,
+                description: this.language.translate('messenger.contact.contact')
             },
         ]);
     }
@@ -315,6 +318,9 @@ export class TelegramBotService extends LoggerWrapper {
         if (text?.includes(Commands.MASTER_LIST)) {
             this.sendMasterList(item, message);
         }
+        if (text?.includes(Commands.CONTACT)) {
+            this.sendContact(item, message);
+        }
         else if (text?.includes(Commands.PAYMENT_SUBSCRIPTION)) {
             this.sendPaymentSubscriptionInvoice(item, message);
         }
@@ -350,23 +356,17 @@ export class TelegramBotService extends LoggerWrapper {
 
     private callbackHandler = async (item: CallbackQuery): Promise<void> => {
         let { data, message } = item;
-        this.log(`callbackHandler "${data}"`);
-        this.log('user loading');
         let user = await this.userGet(message);
-        this.log('user loaded');
-        this.log(data === Commands.MASTER_LIST);
-        this.log(data === Commands.PAYMENT_SUBSCRIPTION);
-
-        console.log(data);
-        console.log(UserUtil.isUser(data), typeof UserUtil.isUser(data));
         if (data === Commands.MASTER_LIST) {
             this.sendMasterList(user, message);
         }
         else if (data === Commands.PAYMENT_SUBSCRIPTION) {
             this.sendPaymentSubscriptionInvoice(user, message);
         }
+        else if (data === Commands.CONTACT) {
+            this.sendContact(user, message);
+        }
         else if (UserUtil.isUser(data)) {
-            console.log('masterSelected');
             this.masterSelected(message, UserUtil.getUid(data));
         }
         else {
@@ -386,7 +386,7 @@ export class TelegramBotService extends LoggerWrapper {
             let account = await MeaningAccountEntity.getEntity(params.userId, params.project);
             if (_.isNil(account) || account.isExpired) {
                 message = this.language.translate('messenger.payment.action.subscription.description');
-                options = { reply_markup: { inline_keyboard: [[await this.getPaymentSubscriptionButton()]] } };
+                options = { reply_markup: { inline_keyboard: [[this.getPaymentSubscriptionButton()]] } };
             }
             else {
                 message = this.language.translate('messenger.payment.action.subscription.bought');
@@ -407,12 +407,16 @@ export class TelegramBotService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    private async getMasterListButton(): Promise<InlineKeyboardButton> {
+    private getMasterListButton(): InlineKeyboardButton {
         return { text: `🃏 ${this.language.translate('messenger.master.action.list.list')}`, callback_data: Commands.MASTER_LIST };
     }
 
-    private async getPaymentSubscriptionButton(): Promise<InlineKeyboardButton> {
-        return { text: `🃏 ${this.language.translate('messenger.payment.action.subscription.subscription')}`, callback_data: Commands.PAYMENT_SUBSCRIPTION };
+    private getContactButton(): InlineKeyboardButton {
+        return { text: `📧 ${this.language.translate('messenger.contact.contact')}`, url: this.language.translate('messenger.contact.email') };
+    }
+
+    private getPaymentSubscriptionButton(): InlineKeyboardButton {
+        return { text: `⭐ ${this.language.translate('messenger.payment.action.subscription.subscription')}`, callback_data: Commands.PAYMENT_SUBSCRIPTION };
     }
 
     // --------------------------------------------------------------------------
@@ -432,6 +436,7 @@ export class TelegramBotService extends LoggerWrapper {
 
 enum Commands {
     START = 'start',
+    CONTACT = 'contact',
     MASTER_LIST = 'master_list',
     PAYMENT_SUBSCRIPTION = 'payment_subscription'
 }
