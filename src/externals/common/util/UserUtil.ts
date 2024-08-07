@@ -9,7 +9,7 @@ export class UserUtil {
     // --------------------------------------------------------------------------
 
     public static PREFIX = 'user';
-    public static UID_REG_EXP = new RegExp(`^${UserUtil.PREFIX}_[0-9]+$`, 'gm');
+    public static UID_REG_EXP = new RegExp(`^${UserUtil.PREFIX}_[0-9]+$`);
 
     // --------------------------------------------------------------------------
     //
