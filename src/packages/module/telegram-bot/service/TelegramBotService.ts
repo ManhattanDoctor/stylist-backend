@@ -31,7 +31,7 @@ export class TelegramBotService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    private static PAYMENT_SUBSCRIPTION_PRICE = 1;
+    private static PAYMENT_SUBSCRIPTION_PRICE = 100;
 
     // --------------------------------------------------------------------------
     //
