@@ -80,8 +80,8 @@ export class TelegramBotService extends LoggerWrapper {
         this.sendMessage(message.chat.id, this.language.translate('messenger.contact.description'), { reply_markup: { inline_keyboard } });
     }
 
-    private async sendPaymentSubscriptionInvoice(item: UserEntity, message: Message): Promise<void> {
-        this.bot.sendInvoice(message.chat.id,
+    private async sendPaymentSubscriptionInvoice(chatId: number): Promise<void> {
+        this.bot.sendInvoice(chatId,
             this.language.translate('messenger.payment.action.subscription.subscription'),
             this.language.translate('messenger.payment.action.subscription.description'),
             'payload', this.settings.merchant, CoinId.XTR,
@@ -322,7 +322,7 @@ export class TelegramBotService extends LoggerWrapper {
             this.sendContact(item, message);
         }
         else if (text?.includes(Commands.PAYMENT_SUBSCRIPTION)) {
-            this.sendPaymentSubscriptionInvoice(item, message);
+            this.sendPaymentSubscriptionInvoice(message.chat.id);
         }
         else {
             this.sendDefault(item, message);
@@ -361,7 +361,7 @@ export class TelegramBotService extends LoggerWrapper {
             this.sendMasterList(user, message);
         }
         else if (data === Commands.PAYMENT_SUBSCRIPTION) {
-            this.sendPaymentSubscriptionInvoice(user, message);
+            this.sendPaymentSubscriptionInvoice(message.chat.id);
         }
         else if (data === Commands.CONTACT) {
             this.sendContact(user, message);
@@ -380,19 +380,18 @@ export class TelegramBotService extends LoggerWrapper {
         this.unlock(params.userId);
         await this.removeMessage(params.chatId, params.chatMessageId);
 
-        let options: SendMessageOptions = undefined;
-        let { message } = params;
-        if (params.code === ErrorCode.MEANINGS_AMOUNT_EXCEED) {
-            let account = await MeaningAccountEntity.getEntity(params.userId, params.project);
-            if (_.isNil(account) || account.isExpired) {
-                message = this.language.translate('messenger.payment.action.subscription.description');
-                options = { reply_markup: { inline_keyboard: [[this.getPaymentSubscriptionButton()]] } };
-            }
-            else {
+        let { message, chatId } = params;
+        switch (params.code) {
+            case ErrorCode.MEANINGS_AMOUNT_EXCEED:
+                let account = await MeaningAccountEntity.getEntity(params.userId, params.project);
+                if (_.isNil(account) || account.isExpired) {
+                    this.sendPaymentSubscriptionInvoice(chatId);
+                    return;
+                }
                 message = this.language.translate('messenger.payment.action.subscription.bought');
-            }
+                break;
         }
-        this.sendMessage(params.chatId, message, options);
+        this.sendMessage(chatId, message);
     }
 
     private aiMeanedHandler = async (params: IAiMeanedDto): Promise<void> => {
@@ -413,10 +412,6 @@ export class TelegramBotService extends LoggerWrapper {
 
     private getContactButton(): InlineKeyboardButton {
         return { text: `📧 ${this.language.translate('messenger.contact.contact')}`, url: this.language.translate('messenger.contact.email') };
-    }
-
-    private getPaymentSubscriptionButton(): InlineKeyboardButton {
-        return { text: `⭐ ${this.language.translate('messenger.payment.action.subscription.subscription')}`, callback_data: Commands.PAYMENT_SUBSCRIPTION };
     }
 
     // --------------------------------------------------------------------------
