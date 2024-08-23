@@ -19,8 +19,8 @@ export class AiMeanHandler extends TransportCommandHandler<IAiMeanDto, AiMeanCom
     //
     // --------------------------------------------------------------------------
 
-    private static DEFAULT_MAX_MEANING = 100;
-    private static MEANING_ACCOUNT_MAX_MEANING = 500;
+    private static DEFAULT_MAX_MEANING = 2;
+    private static MEANING_ACCOUNT_MAX_MEANING = 8;
 
     // --------------------------------------------------------------------------
     //
