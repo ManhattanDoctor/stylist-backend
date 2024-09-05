@@ -4,7 +4,7 @@
             "spread": {
                 "meaning": {
                     "task": "Опиши подробно стиля человека и разбери каждое изображение в по отдельности.",
-                    "example": "Ответ должен содержать разбор каждой детали одежды. Не более чем на {maxWords} слов. Напиши свой общей вывод в конце.",
+                    "example": "Ответ должен содержать разбор каждой детали одежды. Не более чем на {maxWords} слов. Напиши свой общей вывод в конце и дай совет по улучшению гардероба.",
                     "context": "К тебе обратился человек за помощью в анализе своего стиля."
                 },
                 "question": "Является ли вопрос \"{question}\", заданный картам Таро корректным? Если ответ положительный, то напиши 1, а если отрицательный, то напиши 0."
@@ -29,9 +29,15 @@
             "action": {
                 "subscription": {
                     "month": "На один месяц",
-                    "subscription": "Купить подписку",
                     "bought": "Каждый день стилист может оценивать не более восьми ваших фотографий, вам необходимо подождать.",
-                    "description": "Каждый день стилист может оценивать не более двух ваших фотографий, но если вы хотите увеличить это число до восьми, то вы можете приобрести подписку на месяц, которая стоит ≈ 199 рублей."
+                    "buy": {
+                        "subscription": "Купить подписку",
+                        "description": "Каждый день стилист может оценивать не более двух ваших фотографий, но если вы хотите увеличить это число до восьми, то вы можете приобрести подписку на месяц."
+                    },
+                    "extend": {
+                        "subscription": "Продлить подписку",
+                        "description": "Ваша подписка действительна до {date}, но вы всегда можете продлить ее дополнительно."
+                    }
                 }
             }
         },
@@ -50,12 +56,7 @@
         }
     },
     "notification": {
-        "USER_PAYMENT_SUCCEED": "\"{name}\"{isMale, select, true { купил} false { купила} undefined{} other{ купило}} {TOKEN} токенов за {RUB} рублей",
-        "TAROT_SPREAD_MEANING_ADDED": "\"{name}\"{isMale, select, true { попросил} false { попросила} undefined{} other{ попросило}} трактовку расклада \"{question}\"",
-        "TAROT_SPREAD_MEANING_PREPARED": "\"{name}\"{isMale, select, true { попросил} false { попросила} undefined{} other{ попросило}} проверить трактовку расклада \"{question}\"",
-        "TAROT_SPREAD_MEANING_ERRORED": "\"{name}\" {isMale, select, true { получил} false { получила} undefined{} other{ получило}} ошибку при трактовки расклада \"{question}\"",
-        "TAROT_SPREAD_MEANING_APPROVED": "Трактовка вашего расклада \"{question}\" ожидает вас в приложении",
-        "TAROT_SPREAD_MEANING_REJECTED": "Трактовка вашего расклада отклонена, поскольку {reason, select, UNCLEAR_QUESTION {вопрос непонятен} INCORRECT_QUESTION {вопрос задан некорректно} INCONSEQUENTIAL_QUESTION {вопрос несущественен} RECURRING_QUESTION {этот вопрос уже задавался} INCORRECT_QUESTION_FOR_SPREAD {вопрос не подходит для этого расклада} SEVERAL_QUESTIONS_IN_ONE {несколько вопросов для одного расклада} undefined{} other{}}."
+        "USER_PAYMENT_SUCCEED": "\"{name}\"{isMale, select, true { купил} false { купила} undefined{} other{ купило}} {TOKEN} токенов за {RUB} рублей"
     },
     "format": {
         "meaningsPlural": "{meanings,plural, one {# фотографию} few {# фотографии} many{# фотографий} other{}}"

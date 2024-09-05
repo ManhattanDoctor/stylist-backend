@@ -19,20 +19,12 @@ import { PaymentSucceedEvent } from '@project/module/payment/transport';
 import { ErrorCode } from '@project/common/api';
 import { MeaningAccountEntity } from '@project/module/database/meaning';
 import { LanguageProjects, LanguageProjectProxy } from '@ts-core/language';
+import { PaymentService } from '@project/module/payment/service';
 import * as Bot from 'node-telegram-bot-api';
 import * as _ from 'lodash';
 
 @Injectable()
 export class TelegramBotService extends LoggerWrapper {
-
-    // --------------------------------------------------------------------------
-    //
-    //  Constants
-    //
-    // --------------------------------------------------------------------------
-
-    private static PAYMENT_SUBSCRIPTION_PRICE = 100;
-
     // --------------------------------------------------------------------------
     //
     //  Private Methods
@@ -80,14 +72,15 @@ export class TelegramBotService extends LoggerWrapper {
         this.sendMessage(message.chat.id, this.language.translate('messenger.contact.description'), { reply_markup: { inline_keyboard } });
     }
 
-    private async sendPaymentSubscriptionInvoice(chatId: number): Promise<void> {
-        this.bot.sendInvoice(chatId,
-            this.language.translate('messenger.payment.action.subscription.subscription'),
-            this.language.translate('messenger.payment.action.subscription.description'),
-            'payload', this.settings.merchant, CoinId.XTR,
-            [
-                { amount: TelegramBotService.PAYMENT_SUBSCRIPTION_PRICE, label: this.language.translate('messenger.payment.action.subscription.month') }
-            ])
+    private async sendPaymentSubscriptionInvoice(chatId: number, userId: number, account?: MeaningAccountEntity): Promise<void> {
+        if (_.isNil(account)) {
+            account = await MeaningAccountEntity.getEntity(userId, this.project);
+        }
+        let date = !_.isNil(account) ? account.expiration.toLocaleString('ru-RU', { dateStyle: 'long', timeStyle: 'short' }) : null;
+        let isExtend = !_.isNil(account) ? !account.isExpired : false;
+        let title = this.language.translate(`messenger.payment.action.subscription.${isExtend ? 'extend' : 'buy'}.subscription`, { date });
+        let description = this.language.translate(`messenger.payment.action.subscription.${isExtend ? 'extend' : 'buy'}.description`, { date });
+        this.bot.sendInvoice(chatId, title, description, 'payload', this.settings.merchant, CoinId.RUB, [{ amount: PaymentService.SUBSCRIPTION_PRICE_MONTH_RUB, label: this.language.translate('messenger.payment.action.subscription.month') }])
     }
 
     private async sendPhotoAdd(item: UserEntity, message: Message): Promise<void> {
@@ -318,11 +311,11 @@ export class TelegramBotService extends LoggerWrapper {
         if (text?.includes(Commands.MASTER_LIST)) {
             this.sendMasterList(item, message);
         }
-        if (text?.includes(Commands.CONTACT)) {
+        else if (text?.includes(Commands.CONTACT)) {
             this.sendContact(item, message);
         }
         else if (text?.includes(Commands.PAYMENT_SUBSCRIPTION)) {
-            this.sendPaymentSubscriptionInvoice(message.chat.id);
+            this.sendPaymentSubscriptionInvoice(message.chat.id, item.id);
         }
         else {
             this.sendDefault(item, message);
@@ -335,7 +328,7 @@ export class TelegramBotService extends LoggerWrapper {
         let user = await this.userGet(item);
         let userId = user.id;
         let coinId = params.currency as CoinId;
-        let amount = CoinUtil.toCent(params.total_amount.toString(), coinId);
+        let amount = params.total_amount.toString();
 
         let payment = new PaymentEntity();
         payment.userId = user.id;
@@ -361,7 +354,7 @@ export class TelegramBotService extends LoggerWrapper {
             this.sendMasterList(user, message);
         }
         else if (data === Commands.PAYMENT_SUBSCRIPTION) {
-            this.sendPaymentSubscriptionInvoice(message.chat.id);
+            this.sendPaymentSubscriptionInvoice(message.chat.id, user.id);
         }
         else if (data === Commands.CONTACT) {
             this.sendContact(user, message);
@@ -385,7 +378,7 @@ export class TelegramBotService extends LoggerWrapper {
             case ErrorCode.MEANINGS_AMOUNT_EXCEED:
                 let account = await MeaningAccountEntity.getEntity(params.userId, params.project);
                 if (_.isNil(account) || account.isExpired) {
-                    this.sendPaymentSubscriptionInvoice(chatId);
+                    this.sendPaymentSubscriptionInvoice(chatId, params.userId, account);
                     return;
                 }
                 message = this.language.translate('messenger.payment.action.subscription.bought');

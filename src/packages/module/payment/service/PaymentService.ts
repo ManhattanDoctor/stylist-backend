@@ -14,6 +14,16 @@ import { CoinAccountUpdateCommand } from '@project/module/coin/transport';
 
 @Injectable()
 export class PaymentService extends LoggerWrapper {
+
+    // --------------------------------------------------------------------------
+    //
+    //  Constants
+    //
+    // --------------------------------------------------------------------------
+
+    public static SUBSCRIPTION_PRICE_MONTH_RUB = 9900;
+    public static SUBSCRIPTION_PRICE_MILLISECOND = DateUtil.MILLISECONDS_MONTH / 9900;
+
     // --------------------------------------------------------------------------
     //
     //  Constructor
@@ -34,7 +44,9 @@ export class PaymentService extends LoggerWrapper {
     private getExpirationDelta(item: PaymentTransaction): number {
         switch (item.coinId) {
             case CoinId.XTR:
-                return DateUtil.MILLISECONDS_DAY * Number(item.amount);
+                return Number(item.amount) * DateUtil.MILLISECONDS_DAY;
+            case CoinId.RUB:
+                return Number(item.amount) * PaymentService.SUBSCRIPTION_PRICE_MILLISECOND;
         }
         return 0;
     }
