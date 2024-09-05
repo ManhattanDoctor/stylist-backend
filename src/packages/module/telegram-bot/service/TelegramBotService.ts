@@ -12,7 +12,7 @@ import { UserUtil } from '@project/common/util';
 import { ProjectName } from '@project/common';
 import { AiMeanCommand, AiMeanedEvent, AiMeanedErrorEvent, IAiMeanedDto, IAiMeanedErrorDto } from '@project/module/ai/transport';
 import { Stream } from "stream";
-import { CoinId, CoinUtil } from '@project/common/coin';
+import { CoinId } from '@project/common/coin';
 import { PaymentEntity, PaymentTransactionEntity } from '@project/module/database/payment';
 import { PaymentAggregatorType, PaymentStatus, PaymentTransactionType } from '@project/common/payment';
 import { PaymentSucceedEvent } from '@project/module/payment/transport';
