@@ -50,7 +50,6 @@ export class TelegramBotService extends LoggerWrapper {
         transport.getDispatcher<AiMeanedEvent>(AiMeanedEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedHandler);
         transport.getDispatcher<AiMeanedErrorEvent>(AiMeanedErrorEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedErrorHandler);
 
-        console.log(`Merchant token is ${settings.merchant}`);
         setTimeout(this.initialize, 3 * DateUtil.MILLISECONDS_SECOND);
     }
 
@@ -175,7 +174,7 @@ export class TelegramBotService extends LoggerWrapper {
             },
             {
                 command: Commands.PAYMENT_SUBSCRIPTION,
-                description: this.language.translate('messenger.payment.action.subscription.subscription')
+                description: this.language.translate('messenger.payment.action.subscription.buy.subscription')
             },
             {
                 command: Commands.CONTACT,
