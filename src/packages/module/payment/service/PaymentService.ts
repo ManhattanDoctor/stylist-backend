@@ -21,8 +21,8 @@ export class PaymentService extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    public static SUBSCRIPTION_PRICE_MONTH_RUB = 9900;
-    public static SUBSCRIPTION_PRICE_MILLISECOND = DateUtil.MILLISECONDS_MONTH / 9900;
+    public static SUBSCRIPTION_PRICE_MONTH_RUB = 19900;
+    public static SUBSCRIPTION_PRICE_MILLISECOND = DateUtil.MILLISECONDS_MONTH / 19900;
 
     // --------------------------------------------------------------------------
     //

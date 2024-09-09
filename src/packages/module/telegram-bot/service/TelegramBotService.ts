@@ -50,6 +50,7 @@ export class TelegramBotService extends LoggerWrapper {
         transport.getDispatcher<AiMeanedEvent>(AiMeanedEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedHandler);
         transport.getDispatcher<AiMeanedErrorEvent>(AiMeanedErrorEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedErrorHandler);
 
+        console.log(`Merchant "${settings.merchant}"`);
         setTimeout(this.initialize, 3 * DateUtil.MILLISECONDS_SECOND);
     }
 
