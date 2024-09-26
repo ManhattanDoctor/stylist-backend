@@ -31,7 +31,8 @@ export class AppSettings extends AbstractSettings implements IDatabaseSettings {
     }
 
     public get databaseUserPassword(): string {
-        return this.getValue('POSTGRES_PASSWORD');
+        let value = this.getValue<string>('POSTGRES_PASSWORD');
+        return isBase64(value) ? Buffer.from(value, 'base64').toString() : value;
     }
 
     public get databaseSslCa(): string {
