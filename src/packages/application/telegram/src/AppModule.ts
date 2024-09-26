@@ -4,8 +4,8 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { LoggerModule, TransportModule, TransportType, CacheModule } from '@ts-core/backend-nestjs';
 import { IDatabaseSettings, ModeApplication } from '@ts-core/backend';
 import { AppSettings } from './AppSettings';
+import { TlsOptions } from 'tls';
 import { UserModule } from '@project/module/user';
-import { LoginModule } from '@project/module/login';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from '@project/module/database';
 import { Logger } from '@ts-core/common';
@@ -19,6 +19,7 @@ import { PaymentModule } from '@project/module/payment';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TelegramBotModule } from '@project/module/telegram-bot';
 import { ProjectName } from '@project/common';
+import * as _ from 'lodash';
 
 export class AppModule extends ModeApplication implements OnApplicationBootstrap {
     // --------------------------------------------------------------------------
@@ -46,7 +47,6 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
                 DatabaseModule,
 
                 AiModule.forRoot({ key: settings.openAiApiKey }),
-                LoginModule.forRoot(settings),
 
                 LanguageModule.forRoot({ path: `${process.cwd()}/locale`, projects: [{ name: ProjectName.BOT, locales: ['ru'], prefixes: ['Server.json'] }] }),
                 // LanguageModule.forRoot({ path: `/Users/renat.gubaev/Work/JS/appraiser/appraiser-backend/locale`, projects: [{ name: ProjectName.BOT, locales: ['ru'], prefixes: ['Server.json'] }] }),
@@ -67,6 +67,10 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
     }
 
     public static getOrmConfig(settings: IDatabaseSettings): Array<TypeOrmModuleOptions> {
+        let ssl: TlsOptions = undefined;
+        if (!_.isNil(settings.databaseSslCa) || !_.isNil(settings.databaseSslСert)) {
+            ssl = { ca: settings.databaseSslCa, cert: settings.databaseSslСert }
+        }
         return [
             {
                 type: 'postgres',
@@ -77,6 +81,7 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
                 database: settings.databaseName,
                 synchronize: false,
                 logging: false,
+
                 entities: [
                     `${__dirname}/**/*Entity.{ts,js}`,
                     `${modulePath()}/database/**/*Entity.{ts,js}`,
@@ -84,7 +89,8 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
                 ],
                 autoLoadEntities: true,
                 migrations: [__dirname + '/migration/*.{ts,js}'],
-                migrationsRun: true
+                migrationsRun: true,
+                ssl
             },
             {
                 name: 'seed',
@@ -103,7 +109,8 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
                 ],
                 migrations: [__dirname + '/seed/*.{ts,js}'],
                 migrationsRun: true,
-                migrationsTableName: 'migrations_seed'
+                migrationsTableName: 'migrations_seed',
+                ssl
             }
         ];
     }

@@ -1,8 +1,7 @@
 import { AbstractSettings } from '@project/module/core';
-import { IJwtStrategySettings } from '@project/module/login/strategy';
 import { IDatabaseSettings } from '@ts-core/backend';
 
-export class AppSettings extends AbstractSettings implements IJwtStrategySettings, IDatabaseSettings {
+export class AppSettings extends AbstractSettings implements IDatabaseSettings {
     // --------------------------------------------------------------------------
     //
     //  Public Database Properties
@@ -33,18 +32,12 @@ export class AppSettings extends AbstractSettings implements IJwtStrategySetting
         return this.getValue('POSTGRES_PASSWORD');
     }
 
-    // --------------------------------------------------------------------------
-    //
-    //  JWT Properties
-    //
-    // --------------------------------------------------------------------------
-
-    public get jwtSecret(): string {
-        return this.getValue('JWT_SECRET');
+    public get databaseSslCa(): string {
+        return AbstractSettings.parsePEM(this.getValue('POSTGRES_SSL_CA'));
     }
 
-    public get jwtExpiresTimeout(): number {
-        return this.getValue('JWT_EXPIRES_TIMEOUT', 3110400000);
+    public get databaseSslСert(): string {
+        return this.getValue('POSTGRES_SSL_CERT');
     }
 
     // --------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Logger, LoggerWrapper, ValidateUtil, DateUtil, Transport } from '@ts-core/common';
+import { Logger, LoggerWrapper, ValidateUtil, DateUtil, Transport, PromiseHandler } from '@ts-core/common';
 import { TgUser } from '@ts-core/oauth';
 import { map, filter, takeUntil } from 'rxjs';
 import { InlineKeyboardButton, EditMessageTextOptions, FileOptions, SendPhotoOptions, SendMessageOptions, SuccessfulPayment, PreCheckoutQuery, Message, ChatId, CallbackQuery } from 'node-telegram-bot-api';
@@ -50,7 +50,6 @@ export class TelegramBotService extends LoggerWrapper {
         transport.getDispatcher<AiMeanedEvent>(AiMeanedEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedHandler);
         transport.getDispatcher<AiMeanedErrorEvent>(AiMeanedErrorEvent.NAME).pipe(map(event => event.data), filter(this.aiMeanedFilter), takeUntil(this.destroyed)).subscribe(this.aiMeanedErrorHandler);
 
-        console.log(`Merchant "${settings.merchant}"`);
         setTimeout(this.initialize, 3 * DateUtil.MILLISECONDS_SECOND);
     }
 

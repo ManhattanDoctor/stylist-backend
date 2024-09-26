@@ -9,7 +9,6 @@
         "reset": "npm run reset --prefix src/packages/application/telegram",
         "submodules:update": "git submodule update --init"
     },
-    
     "dependencies": {
         "@nestjs/jwt": "^10.2.0",
         "@nestjs/passport": "^10.0.3",
@@ -20,7 +19,7 @@
         "@nestjs/typeorm": "^10.0.0",
         "@project/common": "file:./src/externals/common",
         "@project/module": "file:./src/packages/module",
-        "@ts-core/backend": "~3.0.19",
+        "@ts-core/backend": "~3.0.20",
         "@ts-core/backend-nestjs": "~10.0.5",
         "@ts-core/backend-nestjs-language": "~10.0.2",
         "@types/request-ip": "^0.0.38",

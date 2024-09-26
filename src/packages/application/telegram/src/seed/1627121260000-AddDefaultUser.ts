@@ -1,8 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 import { UserAccountEntity, UserEntity, UserPreferencesEntity } from '@project/module/database/user';
 import { UserAccountType, UserResource, UserStatus } from '@project/common/user';
-import { LoginService } from '@project/module/login/service';
 import { ValidateUtil } from '@ts-core/common';
+import { LoginUtil } from '@project/common/login';
 import * as _ from 'lodash';
 
 export class AddDefaultUser1627121260000 implements MigrationInterface {
@@ -13,7 +13,7 @@ export class AddDefaultUser1627121260000 implements MigrationInterface {
     // --------------------------------------------------------------------------
 
     public static getLogin(): string {
-        return LoginService.createLogin('111452810894131754642', UserResource.GOOGLE);
+        return LoginUtil.createLogin('111452810894131754642', UserResource.GOOGLE);
     }
 
     // --------------------------------------------------------------------------
