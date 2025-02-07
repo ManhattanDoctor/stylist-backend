@@ -1,6 +1,6 @@
 import { AbstractSettings } from '@project/module/core';
+import { AbstractSettingsStorage } from '@ts-core/common';
 import { IDatabaseSettings } from '@ts-core/backend';
-import { isBase64 } from 'class-validator';
 import * as _ from 'lodash';
 
 export class AppSettings extends AbstractSettings implements IDatabaseSettings {
@@ -31,23 +31,11 @@ export class AppSettings extends AbstractSettings implements IDatabaseSettings {
     }
 
     public get databaseUserPassword(): string {
-        let value = this.getValue<string>('POSTGRES_PASSWORD');
-        return isBase64(value) ? Buffer.from(value, 'base64').toString() : value;
+        return this.getValue('POSTGRES_PASSWORD');
     }
 
     public get databaseSslCa(): string {
-        let value = this.getValue<string>('POSTGRES_SSL_CA');
-        if (_.isNil(value)) {
-            return null;
-        }
-        if (isBase64(value)) {
-            value = Buffer.from(value, 'base64').toString();
-        }
-        return AbstractSettings.parsePEM(value);
-    }
-
-    public get databaseSslСert(): string {
-        return this.getValue('POSTGRES_SSL_CERT');
+        return AbstractSettingsStorage.parsePEM(this.getValue('POSTGRES_SSL_CA'));
     }
 
     // --------------------------------------------------------------------------

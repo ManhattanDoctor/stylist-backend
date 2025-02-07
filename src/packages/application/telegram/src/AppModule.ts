@@ -68,15 +68,9 @@ export class AppModule extends ModeApplication implements OnApplicationBootstrap
 
     public static getOrmConfig(settings: IDatabaseSettings): Array<TypeOrmModuleOptions> {
         let ssl: TlsOptions = undefined;
-        if (!_.isNil(settings.databaseSslCa) || !_.isNil(settings.databaseSslСert)) {
-            ssl = { ca: settings.databaseSslCa, cert: settings.databaseSslСert }
+        if (!_.isNil(settings.databaseSslCa)) {
+            ssl = { ca: settings.databaseSslCa }
         }
-        console.log('databaseHost', settings.databaseHost);
-        console.log('databasePort', settings.databasePort);
-        console.log('databaseName', settings.databaseName);
-        console.log('databaseUserName', settings.databaseUserName);
-        console.log('databaseUserPassword', settings.databaseUserPassword);
-        console.log(ssl);
         return [
             {
                 type: 'postgres',
